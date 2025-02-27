@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+ul, ol {
+  list-style-type: disc; /* Hiển thị dấu chấm (•) */
+}
+
+
+.swiper-slide {
+  text-align: center;
+  font-size: 18px;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  display: none;
+}
+
+body {
+  font-family: "Josefin Sans", serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  -webkit-line-clamp: 2; /* Số dòng tối đa */
+}
+
+/* Định dạng cho các thẻ tiêu đề h1 - h6 trong blogView */
+.blogView h1 {
+  font-size: 2.5rem; /* Kích thước chữ lớn nhất cho tiêu đề chính */
+  font-weight: 700; /* Độ đậm của chữ */
+  margin: 10px 0; /* Khoảng cách trên dưới giữa tiêu đề và các phần khác */
+  padding: 0;
+  letter-spacing: 0.3px;
+}
+
+.blogView h2 {
+  font-size: 1.4rem; /* Kích thước chữ cho tiêu đề cấp 2 */
+  font-weight: 600;
+  margin: 8px 0;
+  padding: 0;
+  letter-spacing: 0.3px;
+}
+
+.blogView h3 {
+  font-size: 1.35rem; /* Kích thước chữ cho tiêu đề cấp 3 */
+  font-weight: 600;
+  margin: 6px 0;
+  padding: 0;
+  letter-spacing: 0.3px;
+}
+
+.blogView h4 {
+  font-size: 1.25rem; /* Kích thước chữ cho tiêu đề cấp 4 */
+  font-weight: 600;
+  letter-spacing: 0.3px;
+
+  margin: 4px 0;
+  padding: 0;
+}
+
+.blogView h5 {
+  font-size: 1.20rem; /* Kích thước chữ cho tiêu đề cấp 5 */
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin: 2px 0;
+  padding: 0;
+  letter-spacing: 0.3px;
+}
+
+.blogView h6 {
+  color: #2b2b2b;
+  font-size: 1.1rem; /* Kích thước chữ cho tiêu đề cấp 6 */
+  font-weight: 500;
+  margin: 1px 0;
+  letter-spacing: 0.3px;
+
+  padding: 0;
+}
+
+/* Tạo thêm style cho đoạn văn và khoảng cách */
+.blogView p,ul {
+  font-size: 1rem; /* Kích thước chữ cho đoạn văn */
+  line-height: 1.6; /* Khoảng cách dòng */
+  margin-bottom: 16px; /* Khoảng cách dưới mỗi đoạn văn */
+  color: #2b2b2b;
+  letter-spacing: 0.3px;
+  padding: 0 0 0 24px;
+}
