@@ -47,7 +47,7 @@ body {
 .blogView h2 {
   font-size: 1.4rem; /* Kích thước chữ cho tiêu đề cấp 2 */
   font-weight: 600;
-  margin: 8px 0;
+  margin: 2px 0;
   padding: 0;
   letter-spacing: 0.3px;
 }
@@ -55,7 +55,7 @@ body {
 .blogView h3 {
   font-size: 1.35rem; /* Kích thước chữ cho tiêu đề cấp 3 */
   font-weight: 600;
-  margin: 6px 0;
+  margin: 2px 0;
   padding: 0;
   letter-spacing: 0.3px;
 }
@@ -65,7 +65,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.3px;
 
-  margin: 4px 0;
+  margin: 2px 0;
   padding: 0;
 }
 
@@ -82,7 +82,7 @@ body {
   color: #2b2b2b;
   font-size: 1.1rem; /* Kích thước chữ cho tiêu đề cấp 6 */
   font-weight: 500;
-  margin: 1px 0;
+  margin: 2px 0;
   letter-spacing: 0.3px;
 
   padding: 0;

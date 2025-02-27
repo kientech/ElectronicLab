@@ -188,7 +188,7 @@ function HomePage() {
               to={"/challenge-series"}
               className="text-blue-400 hover:text-blue-500 transition-all"
             >
-              See All
+              Tất cả
             </Link>
           </div>
           <div className="w-full mt-6">
@@ -199,8 +199,8 @@ function HomePage() {
                     <SkeletonLoading key={index} />
                   ))
                 : // Render PCB designs when data is available
-                  challengeSeries &&
-                  challengeSeries
+                  items &&
+                  items
                     .slice(0, 3)
                     .map((item) => <ProjectCard item={item} key={item.slug} />)}
             </div>
@@ -278,7 +278,7 @@ function HomePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 mt-8 gap-x-4">
+      <div className="grid grid-cols-4 mt-8 gap-x-4 hidden">
         {[1, 2, 3, 4].map((item) => (
           <div className="w-full h-full overflow-hidden rounded-lg">
             <img

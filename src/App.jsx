@@ -79,7 +79,7 @@ function App() {
           <Route path=":category" element={<CategoryPage />} />
           <Route path=":category/:slug" element={<BlogDetail />} />
           <Route path="phat-trien-moi-nhat" element={<LatestDevelopment />} />
-          <Route path="explorer-series" element={<ExplorerSeries />} />
+          <Route path="du-an-noi-bat" element={<ExplorerSeries />} />
           <Route path="challenge-series" element={<ChallengeSeries />} />
           <Route path="contact" element={<ContactMe />} />
         </Route>
