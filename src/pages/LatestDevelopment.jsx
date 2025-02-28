@@ -63,7 +63,7 @@ function LatestDevelopment() {
     <div>
       <div className="w-full h-[200px] relative">
         <img
-          src="../../public/pcb_background.jpeg"
+          src="/pcb_background.jpeg"
           alt=""
           loading="lazy"
           className="w-full h-full object-cover rounded-lg"

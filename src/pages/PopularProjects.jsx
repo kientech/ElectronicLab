@@ -77,7 +77,7 @@ function PopularProjects() {
     <div>
       <div className="w-full h-[200px] relative">
         <img
-          src="../../public/explorer-bg.png"
+          src="/explorer-bg.png"
           alt=""
           loading="lazy"
           className="w-full h-full object-cover rounded-lg"

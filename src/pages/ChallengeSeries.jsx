@@ -78,7 +78,7 @@ function ChallengeSeries() {
     <div>
       <div className="w-full h-[200px] relative">
         <img
-          src="../../public/challenge-bg.jpeg"
+          src="/challenge-bg.jpeg"
           alt=""
           loading="lazy"
           className="w-full h-full object-cover rounded-lg"

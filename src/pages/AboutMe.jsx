@@ -60,59 +60,59 @@ const whatIDo = [
 const technologyUsed = [
   {
     id: 1,
-    image: "../../public/logo-programming/cpp.png",
+    image: "/cpp.png",
   },
   {
     id: 2,
-    image: "../../public/logo-programming/c.png",
+    image: "/c.png",
   },
   {
     id: 3,
-    image: "../../public/logo-programming/arduino.png",
+    image: "/arduino.png",
   },
   {
     id: 4,
-    image: "../../public/logo-programming/esp32.jpeg",
+    image: "/esp32.jpeg",
   },
   {
     id: 5,
-    image: "../../public/logo-programming/flutter.svg",
+    image: "/flutter.svg",
   },
   {
     id: 6,
-    image: "../../public/logo-programming/js.png",
+    image: "/js.png",
   },
   {
     id: 7,
-    image: "../../public/logo-programming/python.png",
+    image: "/python.png",
   },
   {
     id: 8,
-    image: "../../public/logo-programming/easyeda.png",
+    image: "/easyeda.png",
   },
   {
     id: 9,
-    image: "../../public/logo-programming/nodejs.png",
+    image: "/nodejs.png",
   },
   {
     id: 10,
-    image: "../../public/logo-programming/pic.jpg",
+    image: "/pic.jpg",
   },
   {
     id: 11,
-    image: "../../public/logo-programming/rasberry.png",
+    image: "/rasberry.png",
   },
   {
     id: 12,
-    image: "../../public/logo-programming/mongodb.svg",
+    image: "/mongodb.svg",
   },
   {
     id: 13,
-    image: "../../public/logo-programming/reactjs.png",
+    image: "/reactjs.png",
   },
   {
     id: 14,
-    image: "../../public/logo-programming/stm32.svg",
+    image: "/stm32.svg",
   },
 ];
 
