@@ -60,59 +60,59 @@ const whatIDo = [
 const technologyUsed = [
   {
     id: 1,
-    image: "/cpp.png",
+    image: "/logo-programming/cpp.png",
   },
   {
     id: 2,
-    image: "/c.png",
+    image: "/logo-programming/c.png",
   },
   {
     id: 3,
-    image: "/arduino.png",
+    image: "/logo-programming/arduino.png",
   },
   {
     id: 4,
-    image: "/esp32.jpeg",
+    image: "/logo-programming/esp32.jpeg",
   },
   {
     id: 5,
-    image: "/flutter.svg",
+    image: "/logo-programming/flutter.svg",
   },
   {
     id: 6,
-    image: "/js.png",
+    image: "/logo-programming/js.png",
   },
   {
     id: 7,
-    image: "/python.png",
+    image: "/logo-programming/python.png",
   },
   {
     id: 8,
-    image: "/easyeda.png",
+    image: "/logo-programming/easyeda.png",
   },
   {
     id: 9,
-    image: "/nodejs.png",
+    image: "/logo-programming/nodejs.png",
   },
   {
     id: 10,
-    image: "/pic.jpg",
+    image: "/logo-programming/pic.jpg",
   },
   {
     id: 11,
-    image: "/rasberry.png",
+    image: "/logo-programming/rasberry.png",
   },
   {
     id: 12,
-    image: "/mongodb.svg",
+    image: "/logo-programming/mongodb.svg",
   },
   {
     id: 13,
-    image: "/reactjs.png",
+    image: "/logo-programming/reactjs.png",
   },
   {
     id: 14,
-    image: "/stm32.svg",
+    image: "/logo-programming/stm32.svg",
   },
 ];
 
