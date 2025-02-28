@@ -88,11 +88,10 @@ body {
   padding: 0;
 }
 
-/* Tạo thêm style cho đoạn văn và khoảng cách */
 .blogView p,ul {
-  font-size: 1rem; /* Kích thước chữ cho đoạn văn */
-  line-height: 1.6; /* Khoảng cách dòng */
-  margin-bottom: 16px; /* Khoảng cách dưới mỗi đoạn văn */
+  font-size: 1rem; 
+  line-height: 1.6; 
+  margin-bottom: 16px; 
   color: #2b2b2b;
   letter-spacing: 0.3px;
   padding: 0 0 0 24px;
