@@ -122,7 +122,7 @@ function AboutMe() {
       <div className="flex gap-5">
         <div className="w-[40%] rounded-xl h-[530px]">
           <img
-            src="/public/me.jpg"
+            src="/me.jpg"
             alt="Duong Trung Kien"
             className="w-full h-full object-cover rounded-xl"
           />
