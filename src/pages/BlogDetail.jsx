@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import { db } from "../../database/db";
 import { collection, getDocs } from "firebase/firestore";
 import { Link, useParams } from "react-router-dom";
@@ -8,6 +9,9 @@ import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
 import RenderContent from "../components/RenderContent";
 import { toSlug } from "../utils/toSlug";
 import RelatedPosts from "../components/RelatedPosts";
+import Comments from "../components/Comments";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 // Skeleton component for loading
 const SkeletonLoader = () => (
@@ -40,10 +44,45 @@ const SkeletonLoader = () => (
   </div>
 );
 
+const renderContentWithHighlight = (htmlContent) => {
+  return parse(htmlContent, {
+    replace: (domNode) => {
+      if (domNode.name === "pre" && domNode.children.length > 0) {
+        const codeNode = domNode.children[0];
+
+        if (codeNode.name === "code") {
+          // Lấy class từ domNode (thẻ <pre>), không phải từ codeNode
+          const languageClass = domNode.attribs.class || "";
+          const matchedLang = languageClass.match(/language-(\w+)/);
+          const language = matchedLang ? matchedLang[1] : "plaintext"; // Mặc định là plaintext nếu không tìm thấy
+
+          const codeText = codeNode.children[0]?.data || "";
+
+          return (
+            <SyntaxHighlighter
+              language={language}
+              style={oneLight}
+              customStyle={{
+                fontSize: "14px",
+                lineHeight: "1.5",
+                borderRadius: "12px",
+              }}
+            >
+              {codeText}
+            </SyntaxHighlighter>
+          );
+        }
+      }
+    },
+  });
+};
+
 const BlogDetail = () => {
   const { slug, category } = useParams();
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [toc, setToc] = useState([]);
+  const [activeTocId, setActiveTocId] = useState(null);
 
   const fetchBlog = async () => {
     setLoading(true);
@@ -65,6 +104,53 @@ const BlogDetail = () => {
     fetchBlog();
   }, [slug, category]);
 
+  useEffect(() => {
+    if (blog) {
+      // Chờ DOM cập nhật xong rồi lấy tiêu đề
+      setTimeout(() => {
+        const headings = document.querySelectorAll(
+          ".blogView h2, .blogView h3, .blogView h4, .blogView h5, .blogView h6"
+        );
+        const tocData = Array.from(headings).map((heading, index) => {
+          const id = `heading-${index}`;
+          heading.id = id; // Gán ID cho mỗi heading
+          return {
+            id,
+            text: heading.textContent,
+            level: heading.tagName, // "H2" hoặc "H3"
+          };
+        });
+        setToc(tocData);
+      }, 500);
+    }
+  }, [blog]);
+
+  // Lắng nghe scroll để active mục lục
+  useEffect(() => {
+    const handleScroll = () => {
+      const headings = document.querySelectorAll(
+        ".blogView h2, .blogView h3, .blogView h4"
+      );
+
+      let currentHeading = null;
+      headings.forEach((heading) => {
+        const rect = heading.getBoundingClientRect();
+        if (rect.top >= 0 && rect.top <= 150) {
+          currentHeading = heading.id;
+        }
+      });
+
+      if (currentHeading) {
+        setActiveTocId(currentHeading);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   if (loading) return <SkeletonLoader />;
 
   if (!blog) return <p>No blog found.</p>;
@@ -73,10 +159,10 @@ const BlogDetail = () => {
 
   return (
     <div className="mt-4">
-      <div className="p-2 rounded-lg bg-white">
-        <div className="p-4">
-          <Link to={`/${toSlug(blog?.category)}`}>
-            <span className="px-4 py-2 rounded-lg text-blue-500 bg-blue-100">
+      <div className="p-2 w-full h-full rounded-lg bg-white">
+        <div className="p-2 md:p-4">
+          <Link to={`/danh-muc/${toSlug(blog?.category)}`}>
+            <span className="px-4 py-2 rounded-lg text-blue-600 bg-blue-100">
               {blog?.category}
             </span>
           </Link>
@@ -129,7 +215,7 @@ const BlogDetail = () => {
           <div className="mt-2">
             {blog.thumbnail_image ? (
               <img
-                src={blog?.thumbnail_image?.url}
+                src={blog?.thumbnail_image?.url || blog?.thumbnail_image}
                 alt={blog.title}
                 className="w-full md:h-[500px] h-100 object-cover rounded-lg"
               />
@@ -144,28 +230,73 @@ const BlogDetail = () => {
             </span>
           </div>
 
-          <div className="my-8 md:mx-12 mx-2 blogView text-wrap overflow-hidden">
-            {parse(blog?.content)}
-          </div>
-          {/* <div className="my-8 md:mx-12 mx-2 blogView">
-            <RenderContent content={blog?.content} />
-          </div> */}
+          <div className="flex flex-col-reverse md:flex-row gap-x-5 h-auto">
+            {/* Left Column - Content & Comments */}
+            <div className="w-full md:w-[70%]">
+              {/* Blog Content */}
+              <div className="blogView my-8 md:mx-8 mx-2 text-wrap overflow-hidden">
+                {renderContentWithHighlight(blog?.content)}
+              </div>
 
-          {blog?.code_file.url && (
-            <div className="my-4 mx-12">
-              <a
-                href={blog.code_file.url}
-                download
-                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-              >
-                Download Resources
-              </a>
+              {/* Download Resources */}
+              {blog?.code_file?.url && (
+                <div className="my-4 mx-8">
+                  <a
+                    href={blog.code_file.url}
+                    download
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                  >
+                    Download Resources
+                  </a>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Right Column - Table of Contents */}
+            <div className="w-full md:w-[30%]">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm sticky top-4">
+                <h3 className="font-bold mb-2">Mục Lục</h3>
+                <ul className="list-none space-y-2 text-gray-500">
+                  {toc.map((item) => (
+                    <li
+                      key={item.id}
+                      className={`ml-${item.level === "H3" ? "4" : "0"}`}
+                    >
+                      <a
+                        href={`#${item.id}`}
+                        className={`block py-1 px-2 rounded-lg transition-colors ${
+                          activeTocId === item.id
+                            ? "text-blue-500 font-medium"
+                            : "text-gray-600"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          document
+                            .getElementById(item.id)
+                            ?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                      >
+                        {item.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Comments Section - Separated from main content */}
         </div>
       </div>
 
-      <div>
+      <div className="w-full mx-auto mt-12 mb-8">
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <Comments blogId={blog?.id} />
+        </div>
+      </div>
+
+      {/* Related Posts */}
+      <div className="mt-8">
         <RelatedPosts
           currentPostId={blog?.id}
           categorySlug={slug}

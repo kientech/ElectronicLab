@@ -3,13 +3,22 @@ import { db } from "../../database/db";
 import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { Table, Button, Popconfirm, Spin, Drawer, Input, Space } from "antd";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  FilterOutlined,
+} from "@ant-design/icons";
 
 const ManagementBlogs = () => {
   const [blogs, setBlogs] = useState([]);
-  const [loading, setLoading] = useState(false); // State for loading
+  const [filteredBlogs, setFilteredBlogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [filterText, setFilterText] = useState("");
 
   useEffect(() => {
-    setLoading(true); // Start loading
+    setLoading(true);
     const unsubscribe = onSnapshot(
       collection(db, "blogs"),
       (snapshot) => {
@@ -18,58 +27,97 @@ const ManagementBlogs = () => {
           ...doc.data(),
         }));
         setBlogs(blogsList);
-        setLoading(false); // End loading
+        setFilteredBlogs(blogsList);
+        setLoading(false);
       },
       (error) => {
         console.error("Error fetching blogs: ", error);
         toast.error("Failed to fetch blogs.");
-        setLoading(false); // End loading if there's an error
+        setLoading(false);
       }
     );
-
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this blog?")) {
-      setLoading(true); // Start loading during deletion
-      try {
-        await deleteDoc(doc(db, "blogs", id));
-        toast.success("Blog deleted successfully!");
-      } catch (error) {
-        console.error("Error deleting blog: ", error);
-        toast.error("Error deleting blog!");
-      }
-      setLoading(false); // End loading after deletion
+    try {
+      await deleteDoc(doc(db, "blogs", id));
+      toast.success("Blog deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting blog: ", error);
+      toast.error("Error deleting blog!");
     }
   };
+
+  const handleFilterChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setFilterText(value);
+    setFilteredBlogs(
+      blogs.filter((blog) => blog.title.toLowerCase().includes(value))
+    );
+  };
+
+  const columns = [
+    {
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <>
+          <Link to={`/edit-blog/${record.id}`}>
+            <Button type="link" icon={<EditOutlined />} />
+          </Link>
+          <Popconfirm
+            title="Are you sure to delete this blog?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button type="link" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </>
+      ),
+    },
+  ];
 
   return (
     <div>
       <h1>Manage Blogs</h1>
+      <Space style={{ marginBottom: 16 }}>
+        <Button
+          type="primary"
+          icon={<FilterOutlined />}
+          onClick={() => setDrawerVisible(true)}
+        >
+          Filter
+        </Button>
+      </Space>
+      <Drawer
+        title="Filter Blogs"
+        placement="right"
+        closable={true}
+        onClose={() => setDrawerVisible(false)}
+        visible={drawerVisible}
+      >
+        <Input
+          placeholder="Search by title"
+          value={filterText}
+          onChange={handleFilterChange}
+        />
+      </Drawer>
       {loading ? (
-        <p>Loading...</p> // Show loading indicator
+        <Spin size="large" />
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {blogs.map((blog) => (
-              <tr key={blog.id}>
-                <td>{blog.title}</td>
-                <td>
-                  <Link to={`/edit-blog/${blog.id}`}>Edit</Link>
-                  <button onClick={() => handleDelete(blog.id)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          columns={columns}
+          dataSource={filteredBlogs}
+          rowKey="id"
+          pagination={{ pageSize: 5 }}
+        />
       )}
     </div>
   );

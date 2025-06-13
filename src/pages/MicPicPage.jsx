@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { db } from "../../database/db";
-import { toSlug } from "../utils/toSlug";
 import ProjectCard from "../components/ProjectCard";
 import {
   Pagination,
@@ -17,22 +16,24 @@ import SkeletonLoading from "../components/SkeletonLoading";
 
 const { RangePicker } = DatePicker;
 
-function CategoryPage() {
-  const { category } = useParams();
-  console.log("🚀 ~ CategoryPage ~ slug:", category);
+function MicPicPage() {
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
-  console.log("🚀 ~ CategoryPage ~ filteredItems:", filteredItems);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  console.log("🚀 ~ CategoryPage ~ selectedCategory:", selectedCategory);
   const [selectedTags, setSelectedTags] = useState([]);
   const [dateRange, setDateRange] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [tempFilters, setTempFilters] = useState({
+    searchTerm: "",
+    selectedCategory: null,
+    selectedTags: [],
+    dateRange: null,
+  });
   const itemsPerPage = 6;
 
   useEffect(() => {
@@ -41,15 +42,21 @@ function CategoryPage() {
       try {
         const querySnapshot = await getDocs(collection(db, "blogs"));
         const itemsData = querySnapshot.docs.map((doc) => doc.data());
-        setItems(itemsData);
+        const itemsFilter = itemsData.filter(
+          (item) => item.position === "Nền Tảng Kỹ Thuật"
+        );
+        console.log("🚀 ~ fetchItems ~ itemsFilter:", itemsFilter);
+        setItems(itemsFilter);
+        setFilteredItems(itemsFilter);
 
-        // Lọc danh mục theo `slug` ngay khi tải trang
-        const filteredByCategory = category
-          ? itemsData.filter((item) => toSlug(item.category) === category)
-          : itemsData;
-
-        setFilteredItems(filteredByCategory);
-        setSelectedCategory(filteredByCategory[0]?.category);
+        const uniqueCategories = [
+          ...new Set(itemsData.map((item) => item.category)),
+        ];
+        const uniqueTags = [
+          ...new Set(itemsData.flatMap((item) => item.tags).filter(Boolean)),
+        ];
+        setCategories(uniqueCategories);
+        setTags(uniqueTags);
       } catch (error) {
         console.error("Error fetching items: ", error);
       } finally {
@@ -57,27 +64,32 @@ function CategoryPage() {
       }
     };
     fetchItems();
-  }, [category]);
+  }, []);
 
   const applyFilters = () => {
     let filtered = items.filter((item) =>
-      item.title.toLowerCase().includes(searchTerm.toLowerCase())
+      item.title.toLowerCase().includes(tempFilters.searchTerm.toLowerCase())
     );
 
-    if (selectedCategory) {
-      filtered = filtered.filter((item) => item.category === selectedCategory);
-    }
-
-    if (selectedTags.length > 0) {
-      filtered = filtered.filter((item) =>
-        selectedTags.every((tag) => item.tags.includes(tag))
+    if (tempFilters.selectedCategory) {
+      filtered = filtered.filter(
+        (item) => item.category === tempFilters.selectedCategory
       );
     }
 
-    if (dateRange) {
+    if (tempFilters.selectedTags.length > 0) {
+      filtered = filtered.filter((item) =>
+        tempFilters.selectedTags.every((tag) => item.tags.includes(tag))
+      );
+    }
+
+    if (tempFilters.dateRange) {
       filtered = filtered.filter((item) => {
         const publishDate = new Date(item.updated_at);
-        return publishDate >= dateRange[0] && publishDate <= dateRange[1];
+        return (
+          publishDate >= tempFilters.dateRange[0] &&
+          publishDate <= tempFilters.dateRange[1]
+        );
       });
     }
 
@@ -99,18 +111,14 @@ function CategoryPage() {
             Trang chủ
           </Link>
           <span>/</span>
-          <h1 className="text-blue-500 font-semibold">
-            {selectedCategory || "Dự án nổi bật"}
-          </h1>
+          <h1 className="text-blue-500 font-semibold">Nền Tảng Kỹ Thuật</h1>
         </div>
       </div>
 
       <div className="mt-4 flex items-center justify-between">
         <div>
           <h1 className="font-bold text-3xl text-blue-500 py-2">
-            {selectedCategory
-              ? `Danh mục: ${selectedCategory}`
-              : "Phát Triển Mới Nhất"}
+            Nền Tảng Kỹ Thuật
           </h1>
           <div className="w-[100px] h-[2px] rounded-md bg-blue-200"></div>
         </div>
@@ -138,14 +146,17 @@ function CategoryPage() {
           <label>Tìm kiếm</label>
           <Input
             placeholder="Tìm kiếm..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={tempFilters.searchTerm}
+            onChange={(e) =>
+              setTempFilters({ ...tempFilters, searchTerm: e.target.value })
+            }
           />
           <label>Danh mục</label>
           <Select
-            value={selectedCategory}
             placeholder="Chọn danh mục"
-            onChange={setSelectedCategory}
+            onChange={(value) =>
+              setTempFilters({ ...tempFilters, selectedCategory: value })
+            }
             allowClear
             className="w-full"
           >
@@ -159,7 +170,9 @@ function CategoryPage() {
           <Select
             mode="multiple"
             placeholder="Chọn tags"
-            onChange={setSelectedTags}
+            onChange={(value) =>
+              setTempFilters({ ...tempFilters, selectedTags: value })
+            }
             className="w-full"
           >
             {tags.map((tag) => (
@@ -169,7 +182,11 @@ function CategoryPage() {
             ))}
           </Select>
           <label>Ngày cập nhật</label>
-          <RangePicker onChange={setDateRange} />
+          <RangePicker
+            onChange={(dates) =>
+              setTempFilters({ ...tempFilters, dateRange: dates })
+            }
+          />
           <Button type="primary" onClick={applyFilters}>
             Áp dụng
           </Button>
@@ -178,13 +195,13 @@ function CategoryPage() {
 
       <div className="mt-4">
         {loading ? (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[...Array(6)].map((_, index) => (
               <SkeletonLoading key={index} active />
             ))}
           </div>
         ) : filteredItems.length > 0 ? (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {filteredItems
               .slice(
                 (currentPage - 1) * itemsPerPage,
@@ -210,4 +227,4 @@ function CategoryPage() {
   );
 }
 
-export default CategoryPage;
+export default MicPicPage;

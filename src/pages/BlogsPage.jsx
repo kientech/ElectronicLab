@@ -5,9 +5,9 @@ import { Link } from "react-router-dom";
 import { db } from "../../database/db";
 import { formatDate } from "../utils/formatDate";
 
-function ChallengeSeries() {
+function BlogsPage() {
   const [items, setItems] = useState([]);
-  const [challengeSeries, setChallengeSeries] = useState([]);
+  const [BlogsPage, setBlogsPage] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [sortOption, setSortOption] = useState("newest");
@@ -24,10 +24,10 @@ function ChallengeSeries() {
         }));
         setItems(itemsData);
 
-        const filteredChallengeSeries = itemsData.filter(
+        const filteredBlogsPage = itemsData.filter(
           (item) => item.category === "Challenge Series"
         );
-        setChallengeSeries(filteredChallengeSeries);
+        setBlogsPage(filteredBlogsPage);
       } catch (error) {
         console.error("Error fetching items: ", error);
       } finally {
@@ -39,8 +39,8 @@ function ChallengeSeries() {
   }, []);
 
   // Function to handle sorting and filtering
-  const getFilteredChallengeSeries = () => {
-    let filteredDesigns = challengeSeries.filter((item) =>
+  const getFilteredBlogsPage = () => {
+    let filteredDesigns = BlogsPage.filter((item) =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -88,7 +88,7 @@ function ChallengeSeries() {
             Home
           </Link>
           <span>/</span>
-          <h1 className="font-semibold text-md text-green-500">
+          <h1 className="font-semibold text-md text-blue-500">
             Challenge Series
           </h1>
         </div>
@@ -133,7 +133,7 @@ function ChallengeSeries() {
               ? Array.from({ length: 6 }).map((_, index) => (
                   <SkeletonLoading key={index} />
                 ))
-              : getFilteredChallengeSeries().map((item) => (
+              : getFilteredBlogsPage().map((item) => (
                   <Link to={`/${item?.slug}`} key={item?.slug}>
                     <div className="p-3 rounded-xl bg-white group">
                       <div className="w-full h-52 rounded-xl overflow-hidden">
@@ -155,7 +155,7 @@ function ChallengeSeries() {
                             loading="lazy"
                             className="w-8 h-8 rounded-full object-cover"
                           />
-                          <h1 className="font-semibold text-sm text-green-500">
+                          <h1 className="font-semibold text-sm text-blue-500">
                             Kien Duong Trung
                           </h1>
                           <div className="w-2 h-2 rounded-full bg-gray-200"></div>
@@ -163,7 +163,7 @@ function ChallengeSeries() {
                             {formatDate(item?.publish_date.toDate())}
                           </span>
                         </div>
-                        <h1 className="py-2 font-semibold text-lg ml-2 text-green-500">
+                        <h1 className="py-2 font-semibold text-lg ml-2 text-blue-500">
                           {item?.title}
                         </h1>
                       </div>
@@ -177,4 +177,4 @@ function ChallengeSeries() {
   );
 }
 
-export default ChallengeSeries;
+export default BlogsPage;

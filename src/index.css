@@ -6,6 +6,9 @@ ul, ol {
   list-style-type: disc; /* Hiển thị dấu chấm (•) */
 }
 
+.sidebar_list li{
+  list-style: none;
+}
 
 .swiper-slide {
   text-align: center;
@@ -22,7 +25,7 @@ ul, ol {
 }
 
 body {
-  font-family: "Josefin Sans", serif;
+  font-family: "League Spartan", sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -35,64 +38,106 @@ body {
   -webkit-line-clamp: 2; /* Số dòng tối đa */
 }
 
-/* Định dạng cho các thẻ tiêu đề h1 - h6 trong blogView */
+/* Định dạng tiêu đề trong blog */
 .blogView h1 {
-  font-size: 2.5rem; /* Kích thước chữ lớn nhất cho tiêu đề chính */
-  font-weight: 700; /* Độ đậm của chữ */
-  margin: 10px 0; /* Khoảng cách trên dưới giữa tiêu đề và các phần khác */
+  font-size: 2rem; /* Kích thước chữ lớn nhất */
+  font-weight: 700;
+  margin: 20px 0 12px; /* Khoảng cách trên dưới để tạo sự nổi bật */
+  line-height: 1.3; /* Điều chỉnh độ cao dòng giúp dễ đọc */
   padding: 0;
-  letter-spacing: 0.3px;
+  color: #222; /* Màu chữ đậm hơn để tăng độ tương phản */
 }
 
 .blogView h2 {
-  font-size: 1.4rem; /* Kích thước chữ cho tiêu đề cấp 2 */
+  font-size: 1.6rem;
   font-weight: 600;
-  margin: 2px 0;
+  margin: 18px 0 10px;
+  line-height: 1.4;
   padding: 0;
-  letter-spacing: 0.3px;
+  color: #333;
 }
 
 .blogView h3 {
-  font-size: 1.35rem; /* Kích thước chữ cho tiêu đề cấp 3 */
+  font-size: 1.4rem;
   font-weight: 600;
-  margin: 2px 0;
+  margin: 16px 0 8px;
+  line-height: 1.4;
   padding: 0;
-  letter-spacing: 0.3px;
+  color: #444;
 }
 
 .blogView h4 {
-  font-size: 1.25rem; /* Kích thước chữ cho tiêu đề cấp 4 */
+  font-size: 1.2rem;
   font-weight: 600;
-  letter-spacing: 0.3px;
-
-  margin: 2px 0;
+  margin: 14px 0 8px;
+  line-height: 1.4;
   padding: 0;
+  color: #555;
 }
 
 .blogView h5 {
-  font-size: 1.20rem; /* Kích thước chữ cho tiêu đề cấp 5 */
+  font-size: 1.0rem;
   font-weight: 500;
-  letter-spacing: 1px;
-  margin: 2px 0;
+  margin: 12px 0 6px;
+  line-height: 1.5;
   padding: 0;
-  letter-spacing: 0.3px;
+  color: #666;
 }
 
 .blogView h6 {
-  color: #2b2b2b;
-  font-size: 1.1rem; /* Kích thước chữ cho tiêu đề cấp 6 */
+  font-size: 1rem;
   font-weight: 500;
-  margin: 2px 0;
-  letter-spacing: 0.3px;
-
+  margin: 10px 0 5px;
+  line-height: 1.5;
   padding: 0;
+  color: #777;
 }
 
-.blogView p,ul {
-  font-size: 1rem; 
-  line-height: 1.6; 
-  margin-bottom: 16px; 
+/* Tối ưu đoạn văn bản và danh sách */
+.blogView p, 
+.blogView ul {
+  font-size: 1rem;
+  line-height: 1.7; /* Tăng line-height giúp dễ đọc */
+  margin-bottom: 20px; /* Tạo khoảng cách giữa các đoạn */
   color: #2b2b2b;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   padding: 0 0 0 24px;
+}
+
+/* Tối ưu danh sách bullet points */
+.blogView ul {
+  list-style-type: disc; /* Hiển thị dấu chấm tròn */
+  padding-left: 30px;
+}
+
+.blogView ul li {
+  margin-bottom: 8px;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Tối ưu khoảng cách cho blockquote (trích dẫn) */
+.blogView blockquote {
+  font-style: italic;
+  border-left: 4px solid #0073e6;
+  margin: 20px 0;
+  padding: 10px 20px;
+  background: #f8f8f8;
+  color: #333;
+}
+
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+th {
+  background-color: #f4f4f4;
+  text-align: left;
 }

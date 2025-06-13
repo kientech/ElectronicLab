@@ -63,7 +63,7 @@ function RecoverPassword() {
               <div className="my-8 w-full h-full mx-auto">
                 <button
                   type="submit"
-                  className="block w-[300px] mx-auto py-3 text-green-700 rounded-lg bg-buttonColor"
+                  className="block w-[300px] mx-auto py-3 text-blue-700 rounded-lg bg-buttonColor"
                   disabled={loading} // Disable button while loading
                 >
                   Reset Password

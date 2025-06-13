@@ -41,16 +41,18 @@ function RelatedPosts({ currentPostId, categorySlug, tags }) {
   if (!loading && relatedPosts.length === 0) return null; // Không hiển thị nếu không có bài nào liên quan
 
   return (
-    <div className="w-full h-full bg-gray-50 mt-8 rounded-lg p-4">
+    <div className="w-full h-full bg-white mt-8 rounded-lg p-4">
       <h1 className="font-bold text-2xl text-gray-800">Bài Viết Liên Quan</h1>
-      <div className="grid grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
         {loading
           ? Array.from({ length: 3 }).map((_, index) => (
               <SkeletonLoading key={index} />
             )) // Hiển thị skeleton khi đang load
-          : relatedPosts
-              .slice(0, 3)
-              .map((post) => <ProjectCard item={post} key={post.id} />)}
+          : relatedPosts.slice(0, 3).map((post) => (
+              <div className="shadow-sm rounded-lg">
+                <ProjectCard item={post} key={post.id} />
+              </div>
+            ))}
       </div>
     </div>
   );

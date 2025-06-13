@@ -1,150 +1,155 @@
-import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { RiDashboardLine } from "react-icons/ri";
+import React, { useState } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { Menu, Drawer, Button } from "antd";
+import { RiDashboardLine, RiMenu3Line } from "react-icons/ri";
 import { HiOutlineUser } from "react-icons/hi2";
 import { GiCircuitry } from "react-icons/gi";
 import { FaLaptopCode } from "react-icons/fa6";
 import { AiOutlineLogout } from "react-icons/ai";
 import { LiaProjectDiagramSolid } from "react-icons/lia";
 import { PiPhoneCallLight } from "react-icons/pi";
-import { toSlug } from "../utils/toSlug";
-
+import { FaInfinity } from "react-icons/fa";
 import { signOut } from "firebase/auth";
 import { toast } from "react-toastify";
-import { auth } from "../../database/db"; // Import auth from your Firebase config
+import { auth } from "../../database/db";
+import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
 
-function Sidebar() {
-  const displayName = localStorage.getItem("displayName");
-  console.log(auth);
-
+const Sidebar = () => {
+  const navigate = useNavigate();
   const location = useLocation();
-  const navigate = useNavigate(); // Initialize navigate
-
-  const navigations = [
-    {
-      id: 1,
-      name: "Trang Chủ",
-      icon: <RiDashboardLine size={24} />,
-      path: "/",
-    },
-    {
-      id: 2,
-      name: "Giới Thiệu",
-      icon: <HiOutlineUser size={24} />,
-      path: "/about-me",
-    },
-    {
-      id: 3,
-      name: "Phát Triển Mới Nhất",
-      icon: <GiCircuitry size={24} />,
-      path: "/phat-trien-moi-nhat",
-    },
-    {
-      id: 4,
-      name: "Dự Án Nổi Bật",
-      icon: <FaLaptopCode size={24} />,
-      path: `/du-an-noi-bat`,
-    },
-    {
-      id: 6,
-      name: "Bài Viết",
-      icon: <LiaProjectDiagramSolid size={24} />,
-      path: "/challenge-series",
-    },
-    {
-      id: 7,
-      name: "Liên Hệ",
-      icon: <PiPhoneCallLight size={24} />,
-      path: "/contact",
-    },
-  ];
+  const [openDrawer, setOpenDrawer] = useState(false);
+  const displayName = localStorage.getItem("displayName");
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       localStorage.removeItem("displayName");
-      toast.success("Log Out Successfully", {
-        position: "top-center", // Positioning the toast at the top center
-        autoClose: 3000, // Automatically close after 3 seconds
-        hideProgressBar: false, // Show the progress bar
-        closeOnClick: true, // Close on click
-        pauseOnHover: true, // Pause on hover
-        draggable: true, // Allow dragging the toast
-      });
-      navigate("/login"); // Redirect to login page after logout
+      toast.success("Đăng xuất thành công!");
+      navigate("/");
     } catch (error) {
-      toast.error("Log Out Failed", {
-        position: "top-center", // Positioning the toast at the top center
-        autoClose: 3000, // Automatically close after 3 seconds
-        hideProgressBar: false, // Show the progress bar
-        closeOnClick: true, // Close on click
-        pauseOnHover: true, // Pause on hover
-        draggable: true, // Allow dragging the toast
-      });
+      toast.error("Đăng xuất thất bại!");
     }
   };
 
+  const items = [
+    {
+      key: "/",
+      label: "Trang Chủ",
+      icon: <RiDashboardLine size={20} />,
+    },
+    {
+      key: "/about-me",
+      label: "Giới Thiệu",
+      icon: <HiOutlineUser size={20} />,
+    },
+    {
+      key: "/phat-trien-moi-nhat",
+      label: "Phát Triển Mới Nhất",
+      icon: <GiCircuitry size={20} />,
+    },
+    {
+      key: "/du-an-noi-bat",
+      label: "Dự Án Nổi Bật",
+      icon: <FaLaptopCode size={20} />,
+    },
+    {
+      key: "/ung-dung-cong-nghe",
+      label: "Ứng Dụng Công Nghệ",
+      icon: <FaInfinity size={20} />,
+    },
+    {
+      key: "/nen-tang-ky-thuat",
+      label: "Nền Tảng Kỹ Thuật",
+      icon: <LiaProjectDiagramSolid size={20} />,
+    },
+    {
+      key: "/bai-viet",
+      label: "Bài Viết",
+      icon: <BsReverseLayoutTextSidebarReverse size={20} />,
+    },
+    {
+      key: "/contact",
+      label: "Liên Hệ",
+      icon: <PiPhoneCallLight size={20} />,
+    },
+    {
+      key: "divider",
+      type: "divider",
+    },
+    displayName && {
+      key: "logout",
+      label: "Đăng Xuất",
+      icon: <AiOutlineLogout size={20} />,
+      onClick: handleLogout,
+    },
+  ].filter(Boolean);
+
   return (
-    <div
-      className="w-[20%] h-full bg-white rounded-xl py-4 px-4 md:flex md:flex-col sticky top-2 left-2 bottom-2 hidden"
-      style={{ minHeight: `calc(100vh - 4px)` }}
-    >
-      <div className="mt-2">
-        <Link to={"/"}>
-          <h1 className="font-bold text-2xl text-black text-center">
+    <>
+      <div className="hidden md:block max-w-[20%] max-h-screen bg-white dark:bg-[#161617] rounded-xl py-4 px-4 sticky top-2 left-2 bottom-2">
+        <Link to="/">
+          <h1 className="font-bold text-2xl text-black dark:text-white text-center">
             ElectronicLab
           </h1>
         </Link>
         <div className="w-full h-[1px] bg-gray-100 my-6"></div>
+        <div className="h-full">
+          <Menu
+            className="bg-white text-black dark:bg-[#161617] dark:text-white"
+            onClick={({ key }) => {
+              if (key === "logout") return;
+              navigate(key);
+            }}
+            selectedKeys={[location.pathname]}
+            mode="inline"
+            style={{
+              width: 256,
+              border: "none",
+              fontFamily: '"League Spartan", sans-serif',
+            }}
+            items={items.map((item) => ({
+              ...item,
+              className: `py-8 ${
+                location.pathname === item.key
+                  ? "bg-gray-100 dark:bg-[#1c1c1c] dark:text-white"
+                  : "hover:bg-gray-100 dark:hover:bg-[#1c1c1c] dark:hover:text-white"
+              }`,
+            }))}
+          />
+        </div>
       </div>
-      <nav className="flex-grow mt-4">
-        <ul>
-          {navigations.map((item) => (
-            <li key={item.id} className="my-4 list-none">
-              <Link
-                to={item.path}
-                className={`flex items-center py-4 px-4 space-x-3 rounded-lg text-gray-600 
-                ${
-                  location.pathname === item.path
-                    ? "bg-gradient-to-r from-blue-400 to-blue-500 text-white"
-                    : ""
-                }
-                hover:bg-gray-100`}
-              >
-                <span
-                  className={`${
-                    location.pathname === item.path
-                      ? "text-white"
-                      : "text-gray-600"
-                  }`}
-                >
-                  {item.icon}
-                </span>
-                <span>{item.name}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      {displayName ? (
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-gray-700 hover:text-red-600 mt-auto px-4 py-4 rounded-lg bg-red-100"
-        >
-          <AiOutlineLogout className="text-xl" />
-          <span>Log out</span>
-        </button>
-      ) : (
-        <Link
-          to={"/login"}
-          className="flex items-center gap-2 text-gray-700 hover:text-blue-600 mt-auto px-4 py-4 rounded-lg bg-green-100"
-        >
-          <AiOutlineLogout className="text-xl" />
-          <span>Khám Phá</span>
-        </Link>
-      )}
-    </div>
+      <div className="md:hidden fixed top-4 left-4 z-50">
+        <Button
+          type="text"
+          icon={<RiMenu3Line size={28} />}
+          onClick={() => setOpenDrawer(true)}
+        />
+      </div>
+      <Drawer
+        title="Menu"
+        placement="left"
+        onClose={() => setOpenDrawer(false)}
+        open={openDrawer}
+        styles={{
+          body: {
+            padding: 0,
+            backgroundColor: "#F5F7FE",
+          },
+        }}
+      >
+        <Menu
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={items}
+          onClick={({ key }) => {
+            navigate(key);
+            setOpenDrawer(false);
+          }}
+          className="bg-transparent"
+        />
+      </Drawer>
+    </>
   );
-}
+};
 
 export default Sidebar;

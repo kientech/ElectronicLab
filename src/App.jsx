@@ -4,19 +4,17 @@ import {
   Routes,
   Route,
   Outlet,
+  useLocation,
 } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import AboutMe from "./pages/AboutMe";
-import ExplorerSeries from "./pages/PopularProjects";
-import ChallengeSeries from "./pages/ChallengeSeries";
+import PopularProjects from "./pages/PopularProjects";
+import ChallengeSeries from "./pages/BlogsPage";
 import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
 import RecoverPassword from "./pages/RecoverPage";
 import Dashboard from "./admin/Dashboard";
-import CreateBlog from "./admin/CeateBlog";
-import NotFound from "./pages/NotFound";
+import CreateBlog from "./admin/CreateBlog";
 import DashboardSidebar from "./admin/DashboardSidebar";
 import ProtectRoute from "./admin/ProtectRoute";
 import BlogDetail from "./pages/BlogDetail";
@@ -26,11 +24,32 @@ import AllProjects from "./admin/AllProjects";
 import LatestDevelopment from "./pages/LatestDevelopment";
 import EditBlog from "./admin/EditBlog";
 import CategoryPage from "./pages/CategoryPage";
+import BlogsPage from "./pages/BlogsPage";
+import { useEffect } from "react";
+import { DarkModeProvider } from "./contexts/DarkModeContext";
+import TechApplyPage from "./pages/TechApplyPage";
+import MicPicPage from "./pages/MicPicPage";
+import { ConfigProvider, theme } from "antd";
+import { AuthProvider } from "./contexts/AuthContext";
+import NotFound from "./pages/NotFound";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../database/db";
+import { ThemeProvider } from "./context/ThemeContext";
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 const Layout = () => {
   return (
-    <div className="bg-[#F5F7FE]">
-      <div className="md:flex bg-[#F5F7FE] md:min-h-screen w-full p-2 rounded-xl">
+    <div className="bg-[#F5F7FE] dark:bg-[#1C1C1C]">
+      <div className="md:flex bg-[#F5F7FE] dark:bg-[#1C1C1C] md:min-h-screen w-full p-2 rounded-xl">
         <Sidebar />
         <div className="md:w-[80%] w-full">
           <Header />
@@ -59,40 +78,81 @@ const DashboardLayout = () => {
 };
 
 function App() {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("user");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
-    <Router>
-      <Routes>
-        {/* Protected Admin Routes */}
-        <Route element={<ProtectRoute />}>
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="create-project" element={<CreateBlog />} />
-            <Route path="edit-project/:id" element={<EditBlog />} />
-            <Route path="all-projects" element={<AllProjects />} />
-          </Route>
-        </Route>
+    <ThemeProvider>
+      <ConfigProvider
+        theme={{
+          algorithm: theme.defaultAlgorithm,
+        }}
+      >
+        <AuthProvider>
+          <DarkModeProvider>
+            <Router>
+              <ScrollToTop />
+              <div className="min-h-screen flex flex-col">
+                <main className="flex-grow">
+                  <Routes>
+                    {/* Protected Admin Routes */}
+                    <Route element={<ProtectRoute />}>
+                      <Route path="/dashboard" element={<DashboardLayout />}>
+                        <Route index element={<Dashboard />} />
+                        <Route path="create-project" element={<CreateBlog />} />
+                        <Route path="edit-project/:id" element={<EditBlog />} />
+                        <Route path="all-projects" element={<AllProjects />} />
+                      </Route>
+                    </Route>
 
-        {/* Public Routes */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<HomePage />} />
-          <Route path="about-me" element={<AboutMe />} />
-          <Route path=":category" element={<CategoryPage />} />
-          <Route path=":category/:slug" element={<BlogDetail />} />
-          <Route path="phat-trien-moi-nhat" element={<LatestDevelopment />} />
-          <Route path="du-an-noi-bat" element={<ExplorerSeries />} />
-          <Route path="challenge-series" element={<ChallengeSeries />} />
-          <Route path="contact" element={<ContactMe />} />
-        </Route>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Layout />}>
+                      <Route index element={<HomePage />} />
+                      <Route path="about-me" element={<AboutMe />} />
+                      <Route
+                        path="danh-muc/:category"
+                        element={<CategoryPage />}
+                      />
+                      <Route path=":category/:slug" element={<BlogDetail />} />
+                      <Route
+                        path="phat-trien-moi-nhat"
+                        element={<LatestDevelopment />}
+                      />
+                      <Route
+                        path="du-an-noi-bat"
+                        element={<PopularProjects />}
+                      />
+                      <Route
+                        path="ung-dung-cong-nghe"
+                        element={<TechApplyPage />}
+                      />
+                      <Route
+                        path="nen-tang-ky-thuat"
+                        element={<MicPicPage />}
+                      />
+                      <Route path="bai-viet" element={<BlogsPage />} />
+                      <Route path="contact" element={<ContactMe />} />
+                    </Route>
 
-        {/* Authentication Routes */}
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
-        <Route path="recover-password" element={<RecoverPassword />} />
-
-        {/* Fallback Route for NotFound */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+                    {/* Fallback Route for NotFound */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
+            </Router>
+          </DarkModeProvider>
+        </AuthProvider>
+      </ConfigProvider>
+    </ThemeProvider>
   );
 }
 

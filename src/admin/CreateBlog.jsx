@@ -1,26 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../../database/db";
+import { addDoc, collection, getDocs } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../../database/db";
 import { toSlug } from "../utils/toSlug";
 import { toast } from "react-toastify";
 import {
   Form,
   Input,
   Select,
+  Upload,
   Button,
   Card,
+  Divider,
+  InputNumber,
+  Switch,
+  Space,
+  Tag,
+  Tooltip,
   Steps,
+  message,
   Row,
   Col,
   Alert,
   Progress,
   Modal,
-  Upload,
-  InputNumber,
-  Space,
-  Tag,
 } from "antd";
 import {
   FileImageOutlined,
@@ -35,6 +39,7 @@ import {
   FileZipOutlined,
   GlobalOutlined,
   LockOutlined,
+  UploadOutlined,
   PictureOutlined,
   FileOutlined,
   HeartOutlined,
@@ -42,6 +47,8 @@ import {
   SendOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { uploadFile } from "../../middleware/uploadFile";
 import { categoryOptions } from "../../database/categories";
@@ -50,17 +57,31 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { Step } = Steps;
 
-const EditBlog = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+function CreateBlog() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [thumbnailPreview, setThumbnailPreview] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [content, setContent] = useState("");
+  const [formData, setFormData] = useState({});
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [tags, setTags] = useState([]);
+
+  useEffect(() => {
+    // Load tags from database
+    const loadTags = async () => {
+      try {
+        const tagsSnapshot = await getDocs(collection(db, "tags"));
+        const tagsData = tagsSnapshot.docs.map((doc) => doc.data().name);
+        setTags(tagsData);
+      } catch (error) {
+        console.error("Error loading tags:", error);
+      }
+    };
+    loadTags();
+  }, []);
 
   const positionList = [
     "Phát Triển Mới Nhất",
@@ -69,47 +90,34 @@ const EditBlog = () => {
     "Nền Tảng Kỹ Thuật",
   ];
 
-  // Load blog data
-  useEffect(() => {
-    const fetchBlog = async () => {
-      try {
-        const docRef = doc(db, "blogs", id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setThumbnailPreview(data.thumbnail_image);
-          form.setFieldsValue({
-            title: data.title,
-            thumbnail: data.thumbnail_image,
-            videoDemo: data.video_demo,
-            author: data.author,
-            viewCount: data.view_count || 0,
-            likeCount: data.like_count || 0,
-            category: data.category,
-            tags: data.tags || [],
-            shortDescription: data.short_description,
-            customUrl: data.custom_url,
-            slug: data.slug,
-            status: data.status,
-            position: data.position || "",
-            content: data.content,
-          });
-        } else {
-          toast.error("Bài viết không tồn tại!");
-          navigate("/dashboard/all-projects");
-        }
-      } catch (error) {
-        toast.error("Lỗi khi tải dữ liệu!");
+  const handleImageUpload = async (blobInfo, success, failure) => {
+    try {
+      const file = blobInfo.blob();
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Chỉ chấp nhận file hình ảnh.");
       }
-    };
-    fetchBlog();
-  }, [id, navigate, form]);
+
+      const maxSizeInBytes = 5 * 1024 * 1024;
+      if (file.size > maxSizeInBytes) {
+        throw new Error("Kích thước file quá lớn. Tối đa 5MB.");
+      }
+
+      const storageRef = ref(storage, `blog-images/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      success(downloadURL);
+    } catch (error) {
+      console.error("Upload Error:", error);
+      failure("Có lỗi xảy ra khi tải lên hình ảnh. Vui lòng thử lại.");
+    }
+  };
 
   const handleNext = () => {
     const currentValues = form.getFieldsValue();
     setFormData((prev) => ({
       ...prev,
       ...currentValues,
+      content: content,
     }));
     setCurrentStep(currentStep + 1);
   };
@@ -119,16 +127,26 @@ const EditBlog = () => {
     setFormData((prev) => ({
       ...prev,
       ...currentValues,
+      content: content,
     }));
     setCurrentStep(currentStep - 1);
   };
+
+  useEffect(() => {
+    if (formData.content) {
+      setContent(formData.content);
+    }
+    if (formData) {
+      form.setFieldsValue(formData);
+    }
+  }, [currentStep, formData, form]);
 
   const handlePreview = () => {
     const currentValues = form.getFieldsValue();
     const previewData = {
       ...formData,
       ...currentValues,
-      content: formData.content,
+      content: content,
       thumbnail: thumbnailPreview,
     };
     setPreviewData(previewData);
@@ -138,7 +156,10 @@ const EditBlog = () => {
   const handleThumbnailChange = (e) => {
     const url = e.target.value;
     setThumbnailPreview(url);
-    form.setFieldsValue({ thumbnail: url });
+        setFormData((prev) => ({
+          ...prev,
+      thumbnail: url,
+    }));
   };
 
   const handleSubmit = async () => {
@@ -148,7 +169,7 @@ const EditBlog = () => {
       const allData = {
         ...formData,
         ...currentValues,
-        content: formData.content,
+        content: content,
       };
 
       const requiredFields = {
@@ -178,12 +199,12 @@ const EditBlog = () => {
         setUploadProgress(90);
       }
 
-      await updateDoc(doc(db, "blogs", id), {
+      const blogData = {
         title: allData.title,
-        content: allData.content,
+        content: content,
         thumbnail_image: allData.thumbnail,
         video_demo: allData.videoDemo || "",
-        code_file: codeFileUrl || allData.code_file,
+        code_file: codeFileUrl,
         author: allData.author || "Kien Duong Trung",
         view_count: allData.viewCount || 0,
         like_count: allData.likeCount || 0,
@@ -192,21 +213,37 @@ const EditBlog = () => {
         short_description: allData.shortDescription,
         custom_url: allData.customUrl || "",
         slug: allData.slug,
+        publish_date: new Date(),
         status: allData.status || "public",
         position: allData.position,
+        isDelete: false,
         last_updated: new Date(),
-      });
+      };
 
+      await addDoc(collection(db, "blogs"), blogData);
       setUploadProgress(100);
-      toast.success("Cập nhật bài viết thành công!");
-      navigate("/dashboard/all-projects");
+
+      toast.success("Tạo Dự Án Thành Công!!");
+
+      form.resetFields();
+      setContent("");
+      setThumbnailPreview(null);
+      setCurrentStep(0);
+      setFormData({});
+      setUploadProgress(0);
     } catch (error) {
       console.error("Error:", error);
-      toast.error(error.message || "Có lỗi xảy ra!");
+      toast.error(error.message || "Có Lỗi Xảy Ra!");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (formData.thumbnail) {
+      setThumbnailPreview(formData.thumbnail);
+    }
+  }, [formData.thumbnail]);
 
   const steps = [
     {
@@ -242,8 +279,8 @@ const EditBlog = () => {
                         src={thumbnailPreview}
                         alt="Thumbnail preview"
                         className="w-full h-48 object-cover rounded-lg shadow-md"
-            />
-          </div>
+                      />
+                    </div>
                   )}
                 </div>
               </Form.Item>
@@ -332,54 +369,47 @@ const EditBlog = () => {
             label="Nội dung bài viết"
             rules={[{ required: true, message: "Vui lòng nhập nội dung!" }]}
           >
-          <Editor
-            apiKey="kipc10e7w0fa5b7bozt9l0xwwmoukji25fh9wbyfnbzmuls5"
-              onInit={(evt, editor) => {
-                const content = form.getFieldValue("content");
-                if (content) {
-                  editor.setContent(content);
-                }
-              }}
-              onEditorChange={(content, editor) => {
-                form.setFieldsValue({ content });
-              }}
-            init={{
+            <Editor
+              apiKey="kipc10e7w0fa5b7bozt9l0xwwmoukji25fh9wbyfnbzmuls5"
+              value={content}
+              onEditorChange={setContent}
+              init={{
                 height: 700,
                 menubar: true,
-              plugins: [
-                "advlist",
-                "autolink",
-                "lists",
-                "link",
-                "image",
-                "charmap",
-                "preview",
-                "anchor",
-                "searchreplace",
-                "visualblocks",
-                "code",
-                "fullscreen",
-                "insertdatetime",
-                "media",
-                "table",
+                plugins: [
+                  "advlist",
+                  "autolink",
+                  "lists",
+                  "link",
+                  "image",
+                  "charmap",
+                  "preview",
+                  "anchor",
+                  "searchreplace",
+                  "visualblocks",
                   "code",
-                "help",
-                "wordcount",
-                "emoticons",
-                "template",
-                "paste",
-                "hr",
+                  "fullscreen",
+                  "insertdatetime",
+                  "media",
+                  "table",
+                  "code",
+                  "help",
+                  "wordcount",
+                  "emoticons",
+                  "template",
+                  "paste",
+                  "hr",
                   "directionality",
-                "nonbreaking",
+                  "nonbreaking",
                   "toc",
                   "visualchars",
                   "imagetools",
                   "textpattern",
                   "noneditable",
                   "charmap",
-                "quickbars",
-                "codesample",
-                "pagebreak",
+                  "quickbars",
+                  "codesample",
+                  "pagebreak",
                 ],
                 toolbar1:
                   "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent",
@@ -405,6 +435,118 @@ const EditBlog = () => {
                   th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                   blockquote { border-left: 4px solid #ddd; margin: 1rem 0; padding-left: 1rem; }
                 `,
+                formats: {
+                  alignleft: {
+                    selector:
+                      "p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img",
+                    classes: "text-left",
+                  },
+                  aligncenter: {
+                    selector:
+                      "p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img",
+                    classes: "text-center",
+                  },
+                  alignright: {
+                    selector:
+                      "p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img",
+                    classes: "text-right",
+                  },
+                  alignjustify: {
+                    selector:
+                      "p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img",
+                    classes: "text-justify",
+                  },
+                },
+                fontsize_formats: "8pt 10pt 12pt 14pt 16pt 18pt 24pt 36pt 48pt",
+                font_family_formats:
+                  "Arial=arial,helvetica,sans-serif; Courier New=courier new,courier,monospace; AkrutiKndPadmini=Akpdmi-n",
+                image_caption: true,
+                image_advtab: true,
+                image_title: true,
+                automatic_uploads: true,
+                file_picker_types: "image",
+                images_upload_handler: handleImageUpload,
+                paste_data_images: true,
+                smart_paste: true,
+                link_context_toolbar: true,
+                link_title: false,
+                target_list: [
+                  { title: "None", value: "" },
+                  { title: "New window", value: "_blank" },
+                ],
+                table_default_styles: {
+                  width: "100%",
+                },
+                table_class_list: [
+                  { title: "None", value: "" },
+                  { title: "Bordered", value: "table-bordered" },
+                  { title: "Striped", value: "table-striped" },
+                ],
+                codesample_languages: [
+                  { text: "HTML/XML", value: "markup" },
+                  { text: "JavaScript", value: "javascript" },
+                  { text: "CSS", value: "css" },
+                  { text: "PHP", value: "php" },
+                  { text: "Ruby", value: "ruby" },
+                  { text: "Python", value: "python" },
+                  { text: "Java", value: "java" },
+                  { text: "C", value: "c" },
+                  { text: "C#", value: "csharp" },
+                  { text: "C++", value: "cpp" },
+                ],
+                template_cdate_format:
+                  "[Date Created (CDATE): %m/%d/%Y : %H:%M:%S]",
+                template_mdate_format:
+                  "[Date Modified (MDATE): %m/%d/%Y : %H:%M:%S]",
+                height: 600,
+                min_height: 400,
+                max_height: 800,
+                autoresize_bottom_margin: 50,
+                quickbars_selection_toolbar:
+                  "bold italic | quicklink h2 h3 blockquote quickimage quicktable",
+                quickbars_insert_toolbar: "quickimage quicktable",
+                contextmenu: "link image table configurepermanentpen",
+                a11y_advanced_options: true,
+                skin: "oxide",
+                mobile: {
+                  menubar: true,
+                },
+                menu: {
+                  file: {
+                    title: "File",
+                    items: "newdocument restoredraft | preview | print",
+                  },
+                  edit: {
+                    title: "Edit",
+                    items:
+                      "undo redo | cut copy paste pastetext | selectall | searchreplace",
+                  },
+                  view: {
+                    title: "View",
+                    items:
+                      "code | visualaid visualchars visualblocks | spellchecker | preview fullscreen",
+                  },
+                  insert: {
+                    title: "Insert",
+                    items:
+                      "image link media template codesample inserttable | charmap emoticons hr | pagebreak nonbreaking anchor toc | insertdatetime",
+                  },
+                  format: {
+                    title: "Format",
+                    items:
+                      "bold italic underline strikethrough superscript subscript codeformat | formats blockformats fontformats fontsizes align | forecolor backcolor | removeformat",
+                  },
+                  tools: {
+                    title: "Tools",
+                    items: "spellchecker spellcheckerlanguage | code wordcount",
+                  },
+                  table: {
+                    title: "Table",
+                    items:
+                      "inserttable | cell row column | tableprops deletetable",
+                  },
+                  help: { title: "Help", items: "help" },
+                },
               }}
             />
           </Form.Item>
@@ -495,6 +637,7 @@ const EditBlog = () => {
                   style={{ width: "100%" }}
                   placeholder="Nhập thẻ và nhấn Enter"
                   tokenSeparators={[","]}
+                  options={tags.map((tag) => ({ value: tag, label: tag }))}
                 />
               </Form.Item>
             </Col>
@@ -525,7 +668,7 @@ const EditBlog = () => {
               {React.cloneElement(steps[currentStep].content, {
                 key: currentStep,
               })}
-        </div>
+            </div>
 
             <div className="flex justify-between items-center px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t">
               <div className="flex gap-4">
@@ -539,7 +682,7 @@ const EditBlog = () => {
                     Quay lại
                   </Button>
                 )}
-        </div>
+              </div>
               <div className="flex gap-4">
                 {currentStep < steps.length - 1 ? (
                   <>
@@ -579,7 +722,7 @@ const EditBlog = () => {
                       size="large"
                       className="min-w-[120px]"
                     >
-                      Cập nhật
+                      Xuất bản
                     </Button>
                   </>
                 )}
@@ -627,8 +770,8 @@ const EditBlog = () => {
               <div className="flex items-center gap-1">
                 <HeartOutlined />
                 <span>{previewData.likeCount || 0} lượt thích</span>
-        </div>
-      </div>
+              </div>
+            </div>
             <div
               className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: previewData.content }}
@@ -661,6 +804,6 @@ const EditBlog = () => {
       )}
     </div>
   );
-};
+}
 
-export default EditBlog;
+export default CreateBlog;
