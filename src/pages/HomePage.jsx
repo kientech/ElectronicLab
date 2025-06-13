@@ -40,7 +40,12 @@ function HomePage() {
   }, []);
 
   // Dùng useMemo để tính toán danh sách một cách tối ưu
-  const banner = useMemo(() => items, [items]);
+  const banner = useMemo(() => {
+    // Sắp xếp theo thời gian đăng mới nhất và lấy 3 dự án đầu tiên
+    return [...items]
+      .sort((a, b) => b.publish_date?.toDate() - a.publish_date?.toDate())
+      .slice(0, 3);
+  }, [items]);
   const popular = useMemo(
     () => items.filter((item) => item.position === "Dự Án Nổi Bật"),
     [items]

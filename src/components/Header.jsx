@@ -95,8 +95,13 @@ function Header() {
     <div className="flex items-center justify-between md:p-4 md:mx-8 md:ml-0 ml-16 dark:text-white p-4">
       <div>
         <h1 className="font-bold text-blue-500 dark:text-white md:text-xl text-sm">
-          {greeting}, {user ? user.displayName : "Khách"}
+          {greeting}, {user ? user.displayName : "Quý khách"} 👋
         </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {user
+            ? "Chúc bạn một ngày tốt lành!"
+            : "Vui lòng đăng nhập để trải nghiệm đầy đủ tính năng"}
+        </p>
       </div>
 
       <div className="hidden md:flex items-center gap-x-4">
@@ -112,7 +117,7 @@ function Header() {
         {/* Dark Mode Toggle */}
         <button
           onClick={toggleDarkMode}
-          className="p-2 rounded-md bg-gray-200 dark:bg-gray-700"
+          className="p-2 rounded-md bg-gray-200 dark:bg-gray-700 h-10 w-10 flex items-center justify-center"
         >
           <i
             className={`w-6 h-6 block ${
@@ -128,7 +133,7 @@ function Header() {
             placement="bottomRight"
             arrow
           >
-            <Button type="primary" icon={<UserOutlined />}>
+            <Button type="primary" icon={<UserOutlined />} className="h-10">
               {user.displayName}
             </Button>
           </Dropdown>
@@ -138,15 +143,17 @@ function Header() {
               type="primary"
               icon={<LoginOutlined />}
               onClick={() => setShowAuthModal(true)}
+              className="h-10"
             >
               Đăng nhập
             </Button>
-            <Button
+            {/* <Button
               icon={<UserAddOutlined />}
               onClick={() => setShowAuthModal(true)}
+              className="h-10"
             >
               Đăng ký
-            </Button>
+            </Button> */}
           </Space>
         )}
       </div>
