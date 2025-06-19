@@ -16,6 +16,7 @@ import {
   Avatar,
   Typography,
   Empty,
+  InputNumber,
 } from "antd";
 import {
   EditOutlined,
@@ -40,6 +41,7 @@ import {
   query,
   where,
   orderBy,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "../../database/db";
 import { format } from "date-fns";
@@ -49,6 +51,13 @@ const { Search } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { Text, Paragraph } = Typography;
+
+const positionList = [
+  "Phát Triển Mới Nhất",
+  "Dự Án Nổi Bật",
+  "Ứng Dụng Công Nghệ",
+  "Nền Tảng Kỹ Thuật",
+];
 
 const AllProjects = () => {
   const navigate = useNavigate();
@@ -65,17 +74,18 @@ const AllProjects = () => {
   // Load projects
   useEffect(() => {
     fetchProjects();
-    fetchCategories();
   }, []);
 
   const fetchProjects = async () => {
     try {
       setLoading(true);
       const projectsRef = collection(db, "blogs");
-      const q = query(projectsRef, orderBy("publish_date", "desc"));
-      const querySnapshot = await getDocs(q);
 
-      const projectsData = querySnapshot.docs.map((doc) => {
+      const projectsSnapshot = await getDocs(
+        query(projectsRef, orderBy("publish_date", "desc"))
+      );
+
+      const projectsData = projectsSnapshot.docs.map((doc) => {
         const data = doc.data();
         const publishDate = data.publish_date?.toDate();
         const lastUpdated = data.last_updated?.toDate();
@@ -102,18 +112,24 @@ const AllProjects = () => {
           view_count: data.view_count || 0,
           like_count: data.like_count || 0,
           status: data.status || "public",
-          category: data.category || "uncategorized",
+          category: data.category || "Uncategorized", // Use category directly from blog document
           author: data.author || "Kien Duong Trung",
           thumbnail_image:
             data.thumbnail_image || "https://via.placeholder.com/150",
           tags: data.tags || [],
           short_description: data.short_description || "",
+          position: data.position || null, // position now stores string or null
         };
       });
 
-      console.log("Fetched projects:", projectsData);
       setProjects(projectsData);
       setFilteredProjects(projectsData);
+
+      // Extract unique categories from fetched projects
+      const uniqueCategories = [
+        ...new Set(projectsData.map((project) => project.category)),
+      ].filter(Boolean); // Filter out any undefined/null categories
+      setCategories(uniqueCategories);
     } catch (error) {
       console.error("Error fetching projects:", error);
       message.error("Lỗi khi tải danh sách bài viết!");
@@ -122,19 +138,27 @@ const AllProjects = () => {
     }
   };
 
-  const fetchCategories = async () => {
+  // Function to update position
+  const handlePositionChange = async (value, recordId) => {
     try {
-      const categoriesRef = collection(db, "categories");
-      const querySnapshot = await getDocs(categoriesRef);
-      const categoriesData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      console.log("Fetched categories:", categoriesData); // Debug log
-      setCategories(categoriesData);
+      const projectRef = doc(db, "blogs", recordId);
+      await updateDoc(projectRef, { position: value });
+
+      // Optimistically update the UI
+      setProjects((prevProjects) =>
+        prevProjects.map((project) =>
+          project.id === recordId ? { ...project, position: value } : project
+        )
+      );
+      setFilteredProjects((prevFilteredProjects) =>
+        prevFilteredProjects.map((project) =>
+          project.id === recordId ? { ...project, position: value } : project
+        )
+      );
+      message.success("Cập nhật vị trí thành công!");
     } catch (error) {
-      console.error("Error fetching categories:", error); // Debug log
-      message.error("Lỗi khi tải danh mục!");
+      console.error("Error updating position:", error);
+      message.error("Lỗi khi cập nhật vị trí!");
     }
   };
 
@@ -179,7 +203,6 @@ const AllProjects = () => {
       });
     }
 
-    console.log("Filtered projects:", filtered); // Debug log
     setFilteredProjects(filtered);
   }, [projects, searchText, selectedCategory, selectedStatus, dateRange]);
 
@@ -250,148 +273,114 @@ const AllProjects = () => {
       title: "Bài viết",
       dataIndex: "title",
       key: "title",
-      width: "35%",
       render: (text, record) => (
-        <div className="space-y-2">
-          <div className="flex items-start space-x-3">
-            <Avatar
-              src={record.thumbnail_image}
-              alt={text}
-              className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-            />
-            <div className="flex-1 min-w-0">
-              <Text strong className="block text-base">
-                {text}
-              </Text>
-              <div className="flex items-center gap-2 mt-1">
-                <Text type="secondary" className="text-sm">
-                  {record.author}
-                </Text>
-                <span className="text-gray-400">•</span>
-                <Text type="secondary" className="text-sm">
-                  {formatDate(record.publish_date)}
-                </Text>
-              </div>
-              <Paragraph
-                ellipsis={{
-                  rows: 2,
-                  expandable: true,
-                  symbol: "Xem thêm",
-                }}
-                className="text-sm mt-1 mb-0"
-              >
-                {record.short_description}
-              </Paragraph>
-              <div className="flex flex-wrap gap-1 mt-2">
-                <Tag color="blue" className="capitalize text-xs">
-                  {record.category}
-                </Tag>
-                {record.tags?.map((tag, index) => (
-                  <Tag key={index} color="cyan" className="text-xs">
-                    {tag}
-                  </Tag>
-                ))}
-              </div>
-            </div>
+        <div className="flex items-center space-x-3">
+          <Avatar
+            src={record.thumbnail_image}
+            alt={text}
+            className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+          />
+          <div>
+            <Text strong>{text}</Text>
+            <Text type="secondary" className="block text-sm">
+              {record.author}
+            </Text>
           </div>
         </div>
       ),
     },
     {
-      title: "SEO & Tương tác",
-      key: "seo",
-      width: "25%",
-      render: (_, record) => (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <Tooltip title="Lượt xem">
-              <Tag color="blue" className="flex items-center gap-1">
-                <EyeOutlined className="text-sm" />
-                <span className="text-sm">{record.view_count}</span>
-              </Tag>
-            </Tooltip>
-            <Tooltip title="Lượt thích">
-              <Tag color="red" className="flex items-center gap-1">
-                <HeartOutlined className="text-sm" />
-                <span className="text-sm">{record.like_count}</span>
-              </Tag>
-            </Tooltip>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {record.video_demo && (
-              <Tooltip title="Có video demo">
-                <Tag color="green" className="flex items-center gap-1">
-                  <VideoCameraOutlined className="text-sm" />
-                  <span className="text-sm">Video</span>
-                </Tag>
-              </Tooltip>
-            )}
-            {record.code_file && (
-              <Tooltip title="Có file code">
-                <Tag color="purple" className="flex items-center gap-1">
-                  <CodeOutlined className="text-sm" />
-                  <span className="text-sm">Code</span>
-                </Tag>
-              </Tooltip>
-            )}
-          </div>
-          <div className="space-y-1">
-            <Text type="secondary" className="text-xs block">
-              URL: {record.slug}
-            </Text>
-            <Text type="secondary" className="text-xs block">
-              Cập nhật: {formatDate(record.last_updated)}
-            </Text>
-          </div>
-        </div>
+      title: "Mô tả ngắn",
+      dataIndex: "short_description",
+      key: "short_description",
+      width: "200px",
+      render: (text) => (
+        <Paragraph ellipsis={{ rows: 2, expandable: false }}>{text}</Paragraph>
+      ),
+    },
+    {
+      title: "Vị trí",
+      dataIndex: "position",
+      key: "position",
+      width: "150px",
+      render: (text, record) => (
+        <Select
+          value={text || null}
+          onChange={(value) => handlePositionChange(value, record.id)}
+          className="w-full"
+          allowClear
+          placeholder="Chọn vị trí"
+        >
+          {positionList.map((position) => (
+            <Option key={position} value={position}>
+              {position}
+            </Option>
+          ))}
+        </Select>
+      ),
+    },
+    {
+      title: "Danh mục",
+      dataIndex: "category",
+      key: "category",
+      render: (category) => (
+        <Tag color="blue" className="capitalize">
+          {category}
+        </Tag>
+      ),
+    },
+    {
+      title: "Ngày đăng",
+      dataIndex: "publish_date",
+      key: "publish_date",
+      render: (date) => formatDate(date),
+    },
+    {
+      title: "Lượt xem",
+      dataIndex: "view_count",
+      key: "view_count",
+      render: (count) => (
+        <Tag icon={<EyeOutlined />} color="blue">
+          {count}
+        </Tag>
       ),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: "15%",
       render: (status) => (
-        <div className="space-y-2">
-          <Badge
-            status={getStatusColor(status)}
-            text={getStatusText(status)}
-            className="capitalize"
-          />
-          <div className="flex flex-col gap-1">
+        <Badge status={getStatusColor(status)} text={getStatusText(status)} />
+      ),
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_, record) => (
+        <Space size="middle">
+          <Tooltip title="Xem bài viết">
             <Button
-              type="text"
               icon={<EyeOutlined />}
               onClick={() => window.open(`/blog/${record.slug}`, "_blank")}
-              className="w-full flex items-center justify-center"
-            >
-              Xem
-            </Button>
+            />
+          </Tooltip>
+          <Tooltip title="Sửa bài viết">
             <Button
-              type="text"
               icon={<EditOutlined />}
               onClick={() => navigate(`/dashboard/edit-project/${record.id}`)}
-              className="w-full flex items-center justify-center"
-            >
-              Sửa
-            </Button>
-            <Popconfirm
-              title="Bạn có chắc chắn muốn xóa bài viết này?"
-              onConfirm={() => handleDelete(record.id)}
-              okText="Có"
-              cancelText="Không"
-            >
-          <Button
-                type="text"
-                danger
-            icon={<DeleteOutlined />}
-                className="w-full flex items-center justify-center"
-              >
-                Xóa
-              </Button>
-            </Popconfirm>
-          </div>
-        </div>
+            />
+          </Tooltip>
+          <Popconfirm
+            title="Bạn có chắc chắn muốn xóa bài viết này?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Có"
+            cancelText="Không"
+          >
+            <Tooltip title="Xóa bài viết">
+              <Button icon={<DeleteOutlined />} danger />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -413,34 +402,34 @@ const AllProjects = () => {
               </p>
             </div>
             <Space>
-        <Button
+              <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => navigate("/dashboard/create-project")}
-        >
+              >
                 Tạo bài viết mới
-        </Button>
+              </Button>
               <Button
                 icon={<ReloadOutlined />}
                 onClick={fetchProjects}
                 loading={loading}
               />
             </Space>
-      </div>
+          </div>
         }
       >
         <div className="mb-6 space-y-4">
           <div className="flex flex-wrap gap-4">
             <Search
               placeholder="Tìm kiếm theo tiêu đề, tác giả hoặc mô tả..."
-          allowClear
+              allowClear
               enterButton={<SearchOutlined />}
               size="large"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="w-64"
-        />
-        <Select
+            />
+            <Select
               placeholder="Lọc theo danh mục"
               style={{ width: 200 }}
               value={selectedCategory}
@@ -449,12 +438,12 @@ const AllProjects = () => {
             >
               <Option value="all">Tất cả danh mục</Option>
               {categories.map((category) => (
-                <Option key={category.id} value={category.id}>
-                  {category.name}
-            </Option>
-          ))}
-        </Select>
-        <Select
+                <Option key={category} value={category}>
+                  {category}
+                </Option>
+              ))}
+            </Select>
+            <Select
               placeholder="Lọc theo trạng thái"
               style={{ width: 200 }}
               value={selectedStatus}
@@ -465,7 +454,7 @@ const AllProjects = () => {
               <Option value="public">Công khai</Option>
               <Option value="draft">Bản nháp</Option>
               <Option value="private">Riêng tư</Option>
-        </Select>
+            </Select>
             <RangePicker
               size="large"
               value={dateRange}
@@ -498,19 +487,15 @@ const AllProjects = () => {
           loading={loading}
           rowSelection={rowSelection}
           pagination={{
-            defaultPageSize: 10,
+            pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `Tổng ${total} bài viết`,
-            pageSizeOptions: ["10", "20", "50", "100"],
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} của ${total} mục`,
+            pageSizeOptions: ["5", "10", "20", "50"],
           }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: "max-content" }}
           locale={{
-            emptyText: (
-              <Empty
-                description="Không có bài viết nào"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            ),
+            emptyText: <Empty description="Không có dữ liệu" />,
           }}
         />
       </Card>

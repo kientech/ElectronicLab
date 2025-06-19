@@ -141,3 +141,51 @@ th {
   background-color: #f4f4f4;
   text-align: left;
 }
+
+/* Custom styles for Ant Design Menu selected item */
+.ant-menu-item-selected {
+  background-color: #E6F7FF !important; /* Light blue for selected item in light mode */
+  color: #1890ff !important; /* Blue text for selected item in light mode */
+  border-radius: 8px !important; /* Rounded corners */
+}
+
+.dark .ant-menu-item-selected {
+  background-color: #1A2C3D !important; /* Darker blue for selected item in dark mode */
+  color: #69C0FF !important; /* Lighter blue text for selected item in dark mode */
+}
+
+.dark .ant-menu-item-selected .anticon,
+.dark .ant-menu-item-selected .ant-menu-title-content {
+  color: #69C0FF !important; /* Ensure icon and text color apply in dark mode */
+}
+
+.ant-menu-item-selected .anticon,
+.ant-menu-item-selected .ant-menu-title-content {
+  color: #1890ff !important; /* Ensure icon and text color apply in light mode */
+}
+
+/* Hover styles */
+.ant-menu-item:hover {
+  background-color: #F0F2F5 !important; /* Lighter background on hover in light mode */
+  border-radius: 8px !important;
+}
+
+.dark .ant-menu-item:hover {
+  background-color: #2A3B4C !important; /* Darker background on hover in dark mode */
+}
+
+/* Force Ant Design TextArea to be full width within comments editor */
+.comments-list .ant-input-focused,
+.comments-list .ant-input-textarea {
+  width: 100% !important;
+}
+
+.comments-list .ant-form-item-control-input,
+.comments-list .ant-form-item-control-input-content {
+    width: 100% !important;
+    flex-grow: 1 !important; /* Ensure flex container grows */
+}
+
+.comments-list .ant-input {
+  width: 100% !important;
+}

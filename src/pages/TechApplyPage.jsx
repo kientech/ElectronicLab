@@ -102,7 +102,7 @@ function TechApplyPage() {
     <div>
       <div className="w-full h-[200px] relative">
         <img
-          src="/explorer-bg.png"
+          src="/banner-bg.png"
           alt=""
           className="w-full h-full object-cover rounded-lg"
         />

@@ -68,6 +68,7 @@ const Editor = ({
   value,
   placeholder = "Viết bình luận của bạn...",
   showButton = true,
+  className,
 }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = React.useRef(null);
@@ -140,24 +141,21 @@ const Editor = ({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-start gap-4">
-        <div className="flex-grow">
-          <Form.Item className="mb-1">
-            <TextArea
-              ref={textareaRef}
-              rows={1}
-              onChange={onChange}
-              value={value}
-              placeholder={placeholder}
-              autoSize={{ minRows: 2, maxRows: 6 }}
-              className="rounded-2xl py-2 px-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors"
-            />
-          </Form.Item>
-        </div>
-      </div>
+    <div className={`space-y-3 ${className || ""} flex flex-col min-w-0`}>
+      <Form.Item className="mb-1 w-full flex-grow">
+        <TextArea
+          ref={textareaRef}
+          rows={1}
+          onChange={onChange}
+          value={value}
+          placeholder={placeholder}
+          autoSize={{ minRows: 2, maxRows: 6 }}
+          style={{ width: "100%" }}
+          className="rounded-2xl py-2 px-4 bg-gray-50 hover:bg-gray-100 focus:bg-white transition-colors w-full"
+        />
+      </Form.Item>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between w-full">
         <Space>
           <FormatButton
             icon={<BoldOutlined />}
@@ -408,11 +406,11 @@ const CommentItem = ({
       <List.Item actions={actions}>
         <div className="flex gap-4 w-full">
           <Avatar
-            src={comment.author.avatar}
+            src={comment.author.photoURL || "https://via.placeholder.com/150"}
             className="flex-shrink-0"
             size={48}
           >
-            {!comment.author.avatar && comment.author.name[0]}
+            {!comment.author.photoURL && comment.author.name?.[0]}
           </Avatar>
           <div className="flex-grow">
             <div className="bg-gray-50 hover:bg-gray-100 transition-colors rounded-2xl px-6 py-4">
@@ -668,73 +666,84 @@ const Comments = ({ blogId }) => {
   };
 
   const handleSubmit = async () => {
-    if (!value.trim()) return;
+    if (!value.trim()) {
+      message.warning("Vui lòng nhập bình luận.");
+      return;
+    }
     if (!user) {
-      message.error("Vui lòng đăng nhập để bình luận!");
+      message.error("Vui lòng đăng nhập để bình luận.");
       return;
     }
 
     setSubmitting(true);
-
     try {
-      const commentData = {
+      await addDoc(collection(db, "comments"), {
         blogId,
-        content: value.trim(),
+        content: value,
         author: {
           uid: user.uid,
-          name: user.displayName || "Anonymous",
-          avatar: user.photoURL,
+          name: user.displayName || user.email,
+          photoURL: user.photoURL || "https://via.placeholder.com/150",
         },
         createdAt: Timestamp.now(),
         reactions: {
           likes: [],
           hearts: [],
         },
+        replies: [],
         parentId: null,
-      };
-
-      await addDoc(collection(db, "comments"), commentData);
+      });
+      message.success("Bình luận của bạn đã được gửi!");
       setValue("");
-      message.success("Đã đăng bình luận!");
     } catch (error) {
-      console.error("Error posting comment:", error);
-      message.error(
-        error.code === "permission-denied"
-          ? "Bạn không có quyền đăng bình luận"
-          : "Không thể đăng bình luận. Vui lòng thử lại sau."
-      );
+      console.error("Error adding comment:", error);
+      message.error("Không thể gửi bình luận.");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleReply = async (parentComment, content) => {
+    if (!content.trim()) {
+      message.warning("Vui lòng nhập nội dung trả lời.");
+      return;
+    }
     if (!user) {
-      message.error("Vui lòng đăng nhập để trả lời bình luận!");
+      message.error("Vui lòng đăng nhập để trả lời.");
       return;
     }
 
+    setSubmitting(true);
     try {
-      const replyData = {
+      const replyRef = await addDoc(collection(db, "comments"), {
         blogId,
-        content: content.trim(),
+        content,
         author: {
           uid: user.uid,
-          name: user.displayName || "Anonymous",
-          avatar: user.photoURL,
+          name: user.displayName || user.email,
+          photoURL: user.photoURL || "https://via.placeholder.com/150",
         },
         createdAt: Timestamp.now(),
         reactions: {
           likes: [],
           hearts: [],
         },
+        replies: [],
         parentId: parentComment.id,
-      };
+      });
 
-      await addDoc(collection(db, "comments"), replyData);
-      message.success("Đã trả lời bình luận!");
+      // Update parent comment with reply ID
+      const parentCommentRef = doc(db, "comments", parentComment.id);
+      await updateDoc(parentCommentRef, {
+        replies: [...parentComment.replies, replyRef.id],
+      });
+
+      message.success("Trả lời đã được gửi!");
     } catch (error) {
-      message.error("Không thể trả lời bình luận: " + error.message);
+      console.error("Error adding reply:", error);
+      message.error("Không thể gửi trả lời.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -813,18 +822,24 @@ const Comments = ({ blogId }) => {
       </div>
 
       {user && (
-        <div className="flex gap-4 mb-8">
-          <Avatar src={user.photoURL} size={48} className="flex-shrink-0">
-            {!user.photoURL && user.displayName?.[0]}
-          </Avatar>
-          <div className="flex-grow">
-            <Editor
-              onChange={(e) => setValue(e.target.value)}
-              onSubmit={handleSubmit}
-              submitting={submitting}
-              value={value}
-            />
-          </div>
+        <div className="flex gap-4 mb-4 w-full">
+          <Avatar
+            src={user.photoURL || "https://via.placeholder.com/150"}
+            alt={user.displayName || "User"}
+            size={40}
+            className="flex-shrink-0"
+          />
+          <Editor
+            onChange={(e) => setValue(e.target.value)}
+            onSubmit={handleSubmit}
+            submitting={submitting}
+            value={value}
+            placeholder={
+              user ? "Viết bình luận của bạn..." : "Đăng nhập để bình luận..."
+            }
+            showButton={true}
+            className="flex-grow"
+          />
         </div>
       )}
 

@@ -14,6 +14,7 @@ import "swiper/css/navigation";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import SkeletonLoading from "../components/SkeletonLoading";
 import ProjectCard from "../components/ProjectCard";
+import { DEFAULT_IMAGE } from "../constants/images";
 
 function HomePage() {
   const [items, setItems] = useState([]);
@@ -100,7 +101,7 @@ function HomePage() {
                     className="w-full md:h-[300px] h-[200px] rounded-xl block"
                   >
                     <img
-                      src={item?.thumbnail_image.url}
+                      src={item?.thumbnail_image.url || DEFAULT_IMAGE}
                       className="w-full h-full rounded-xl object-cover"
                       loading="lazy"
                       alt={item.title}

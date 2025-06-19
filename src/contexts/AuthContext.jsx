@@ -18,17 +18,9 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Lấy thông tin user từ Firestore
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          setUser({ ...user, ...userDoc.data() });
-          setUserRole(userDoc.data().role);
-        } else {
-          setUser(user);
-          setUserRole("user");
-        }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        await fetchAndSetUser(firebaseUser);
       } else {
         setUser(null);
         setUserRole(null);
@@ -39,6 +31,36 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  const fetchAndSetUser = async (firebaseUser) => {
+    try {
+      const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+      if (userDoc.exists()) {
+        setUser({ ...firebaseUser, ...userDoc.data() });
+        setUserRole(userDoc.data().role);
+      } else {
+        // If no Firestore document, create one (e.g., for new sign-ups)
+        await setDoc(
+          doc(db, "users", firebaseUser.uid),
+          {
+            displayName: firebaseUser.displayName || "",
+            email: firebaseUser.email,
+            photoURL: firebaseUser.photoURL || "",
+            role: "user",
+            createdAt: new Date(),
+          },
+          { merge: true }
+        );
+        setUser(firebaseUser);
+        setUserRole("user");
+      }
+    } catch (error) {
+      console.error("Error fetching user data from Firestore:", error);
+      // Fallback to basic Firebase user if Firestore fetch fails
+      setUser(firebaseUser);
+      setUserRole("user");
+    }
+  };
+
   const signup = async (email, password, displayName) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -47,14 +69,23 @@ export const AuthProvider = ({ children }) => {
         password
       );
       await updateProfile(userCredential.user, { displayName });
+      // After sign up, immediately fetch and set user data from Firestore
+      await fetchAndSetUser(userCredential.user);
       return userCredential;
     } catch (error) {
       throw error;
     }
   };
 
-  const login = (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password);
+  const login = async (email, password) => {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    // After login, immediately fetch and set user data from Firestore
+    await fetchAndSetUser(userCredential.user);
+    return userCredential;
   };
 
   const logout = () => {
@@ -69,6 +100,13 @@ export const AuthProvider = ({ children }) => {
     return userRole === "admin";
   };
 
+  // New function to manually refresh user data
+  const refreshUserData = async () => {
+    if (auth.currentUser) {
+      await fetchAndSetUser(auth.currentUser);
+    }
+  };
+
   const value = {
     user,
     userRole,
@@ -78,6 +116,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     resetPassword,
     isAdmin,
+    refreshUserData, // Expose the new function
   };
 
   return (

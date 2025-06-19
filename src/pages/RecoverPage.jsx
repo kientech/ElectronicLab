@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FaLongArrowAltLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { DEFAULT_IMAGE } from "../constants/images";
 
 function RecoverPassword() {
   // State to manage the email input, loading, message, and error
@@ -84,6 +85,10 @@ function RecoverPassword() {
         <img
           src="https://cdn.dribbble.com/userupload/14138765/file/original-4bd9e0eb3b782700c8469c74fc8fc7ce.png?resize=1504x1128"
           alt=""
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = DEFAULT_IMAGE;
+          }}
           className="w-full h-full rounded-lg object-cover"
         />
       </div>

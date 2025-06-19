@@ -52,6 +52,7 @@ import {
 } from "@ant-design/icons";
 import { uploadFile } from "../../middleware/uploadFile";
 import { categoryOptions } from "../../database/categories";
+import { DEFAULT_IMAGE } from "../constants/images";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -156,8 +157,8 @@ function CreateBlog() {
   const handleThumbnailChange = (e) => {
     const url = e.target.value;
     setThumbnailPreview(url);
-        setFormData((prev) => ({
-          ...prev,
+    setFormData((prev) => ({
+      ...prev,
       thumbnail: url,
     }));
   };
@@ -278,6 +279,10 @@ function CreateBlog() {
                       <img
                         src={thumbnailPreview}
                         alt="Thumbnail preview"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = DEFAULT_IMAGE;
+                        }}
                         className="w-full h-48 object-cover rounded-lg shadow-md"
                       />
                     </div>

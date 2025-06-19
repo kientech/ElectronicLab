@@ -12,6 +12,7 @@ import RelatedPosts from "../components/RelatedPosts";
 import Comments from "../components/Comments";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { usePosition } from "../contexts/PositionContext";
 
 // Skeleton component for loading
 const SkeletonLoader = () => (
@@ -83,6 +84,7 @@ const BlogDetail = () => {
   const [loading, setLoading] = useState(true);
   const [toc, setToc] = useState([]);
   const [activeTocId, setActiveTocId] = useState(null);
+  const { setCurrentPosition } = usePosition();
 
   const fetchBlog = async () => {
     setLoading(true);
@@ -95,13 +97,19 @@ const BlogDetail = () => {
 
     // Tìm blog theo slug
     const foundBlog = blogList.find((blog) => blog.slug === slug);
-    console.log("🚀 ~ fetchBlog ~ foundBlog:", foundBlog);
     setBlog(foundBlog);
+    setCurrentPosition(foundBlog?.position);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchBlog();
+
+    // Cleanup: Clear position when component unmounts or slug/category changes
+    return () => {
+      console.log("BlogDetail - Cleanup: Setting currentPosition to null");
+      setCurrentPosition(null);
+    };
   }, [slug, category]);
 
   useEffect(() => {
@@ -173,7 +181,7 @@ const BlogDetail = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-x-2 mb-4">
                 <img
-                  src="https://cdn.dribbble.com/users/772985/screenshots/9247897/media/59b9f4624886350945af7b7fd2ee318f.png?resize=1600x1200&vertical=center"
+                  src="/me.jpg"
                   alt=""
                   className="w-12 h-12 object-cover rounded-full"
                 />
@@ -186,27 +194,36 @@ const BlogDetail = () => {
                   </span>
                 </div>
               </div>
-              <div className="flex gap-4 text-gray-400">
+              <div className="flex gap-4">
                 <a
                   href={`https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="hover:scale-110 transition-transform duration-200"
                 >
-                  <FaFacebookF size={20} />
+                  <span style={{ color: "#1877F2" }}>
+                    <FaFacebookF size={20} />
+                  </span>
                 </a>
                 <a
                   href={`https://www.instagram.com/?url=${currentUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="hover:scale-110 transition-transform duration-200"
                 >
-                  <FaInstagram size={20} />
+                  <span style={{ color: "#C13584" }}>
+                    <FaInstagram size={20} />
+                  </span>
                 </a>
                 <a
                   href={`https://twitter.com/intent/tweet?url=${currentUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="hover:scale-110 transition-transform duration-200"
                 >
-                  <FaTwitter size={20} />
+                  <span style={{ color: "#000000" }}>
+                    <FaTwitter size={20} />
+                  </span>
                 </a>
               </div>
             </div>
@@ -252,57 +269,40 @@ const BlogDetail = () => {
               )}
             </div>
 
-            {/* Right Column - Table of Contents */}
-            <div className="w-full md:w-[30%]">
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm sticky top-4">
-                <h3 className="font-bold mb-2">Mục Lục</h3>
-                <ul className="list-none space-y-2 text-gray-500">
+            {/* Right Column - Table of Contents and Related Posts */}
+            <div className="w-full md:w-[30%] px-4">
+              <div className="mt-8 sticky top-4">
+                <h3 className="text-lg font-bold mb-4">Mục lục</h3>
+                <ul className="list-disc pl-5">
                   {toc.map((item) => (
                     <li
                       key={item.id}
-                      className={`ml-${item.level === "H3" ? "4" : "0"}`}
+                      className={`text-gray-700 hover:text-blue-500 cursor-pointer ${
+                        activeTocId === item.id ? "font-bold text-blue-600" : ""
+                      }
+                      ml-${(parseInt(item.level[1]) - 2) * 4}`}
+                      onClick={() => {
+                        document.getElementById(item.id).scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }}
                     >
-                      <a
-                        href={`#${item.id}`}
-                        className={`block py-1 px-2 rounded-lg transition-colors ${
-                          activeTocId === item.id
-                            ? "text-blue-500 font-medium"
-                            : "text-gray-600"
-                        }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          document
-                            .getElementById(item.id)
-                            ?.scrollIntoView({ behavior: "smooth" });
-                        }}
-                      >
-                        {item.text}
-                      </a>
+                      {item.text}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
           </div>
-
-          {/* Comments Section - Separated from main content */}
         </div>
       </div>
-
-      <div className="w-full mx-auto mt-12 mb-8">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <Comments blogId={blog?.id} />
-        </div>
-      </div>
-
-      {/* Related Posts */}
-      <div className="mt-8">
-        <RelatedPosts
-          currentPostId={blog?.id}
-          categorySlug={slug}
-          tags={blog?.tags || []}
-        />
-      </div>
+      {/* Comments */}
+      <Comments blogId={blog.id} />
+      <RelatedPosts
+        currentBlogId={blog.id}
+        currentBlogCategory={blog.category}
+      />
     </div>
   );
 };

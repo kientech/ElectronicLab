@@ -45,6 +45,7 @@ import {
 } from "@ant-design/icons";
 import { uploadFile } from "../../middleware/uploadFile";
 import { categoryOptions } from "../../database/categories";
+import { DEFAULT_IMAGE } from "../constants/images";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -241,9 +242,13 @@ const EditBlog = () => {
                       <img
                         src={thumbnailPreview}
                         alt="Thumbnail preview"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = DEFAULT_IMAGE;
+                        }}
                         className="w-full h-48 object-cover rounded-lg shadow-md"
-            />
-          </div>
+                      />
+                    </div>
                   )}
                 </div>
               </Form.Item>
@@ -332,8 +337,8 @@ const EditBlog = () => {
             label="Nội dung bài viết"
             rules={[{ required: true, message: "Vui lòng nhập nội dung!" }]}
           >
-          <Editor
-            apiKey="kipc10e7w0fa5b7bozt9l0xwwmoukji25fh9wbyfnbzmuls5"
+            <Editor
+              apiKey="kipc10e7w0fa5b7bozt9l0xwwmoukji25fh9wbyfnbzmuls5"
               onInit={(evt, editor) => {
                 const content = form.getFieldValue("content");
                 if (content) {
@@ -343,43 +348,43 @@ const EditBlog = () => {
               onEditorChange={(content, editor) => {
                 form.setFieldsValue({ content });
               }}
-            init={{
+              init={{
                 height: 700,
                 menubar: true,
-              plugins: [
-                "advlist",
-                "autolink",
-                "lists",
-                "link",
-                "image",
-                "charmap",
-                "preview",
-                "anchor",
-                "searchreplace",
-                "visualblocks",
-                "code",
-                "fullscreen",
-                "insertdatetime",
-                "media",
-                "table",
+                plugins: [
+                  "advlist",
+                  "autolink",
+                  "lists",
+                  "link",
+                  "image",
+                  "charmap",
+                  "preview",
+                  "anchor",
+                  "searchreplace",
+                  "visualblocks",
                   "code",
-                "help",
-                "wordcount",
-                "emoticons",
-                "template",
-                "paste",
-                "hr",
+                  "fullscreen",
+                  "insertdatetime",
+                  "media",
+                  "table",
+                  "code",
+                  "help",
+                  "wordcount",
+                  "emoticons",
+                  "template",
+                  "paste",
+                  "hr",
                   "directionality",
-                "nonbreaking",
+                  "nonbreaking",
                   "toc",
                   "visualchars",
                   "imagetools",
                   "textpattern",
                   "noneditable",
                   "charmap",
-                "quickbars",
-                "codesample",
-                "pagebreak",
+                  "quickbars",
+                  "codesample",
+                  "pagebreak",
                 ],
                 toolbar1:
                   "undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent",
@@ -525,7 +530,7 @@ const EditBlog = () => {
               {React.cloneElement(steps[currentStep].content, {
                 key: currentStep,
               })}
-        </div>
+            </div>
 
             <div className="flex justify-between items-center px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t">
               <div className="flex gap-4">
@@ -539,7 +544,7 @@ const EditBlog = () => {
                     Quay lại
                   </Button>
                 )}
-        </div>
+              </div>
               <div className="flex gap-4">
                 {currentStep < steps.length - 1 ? (
                   <>
@@ -627,8 +632,8 @@ const EditBlog = () => {
               <div className="flex items-center gap-1">
                 <HeartOutlined />
                 <span>{previewData.likeCount || 0} lượt thích</span>
-        </div>
-      </div>
+              </div>
+            </div>
             <div
               className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: previewData.content }}

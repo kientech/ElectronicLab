@@ -2,19 +2,32 @@ import React from "react";
 import DashboardSidebar from "./DashboardSidebar";
 import Header from "../components/Header";
 import { Outlet } from "react-router-dom";
+import { Layout } from "antd";
+
+const { Header: AntHeader, Content } = Layout;
 
 function DashboardLayout() {
-  <div className="">
-    <div className="flex bg-[#F5F7FE] min-h-screen p-2 rounded-xl">
+  return (
+    <Layout style={{ minHeight: "100vh" }}>
       <DashboardSidebar />
-      <div className="w-[80%]">
-        <Header />
-        <div className="px-4 mx-8">
+      <Layout>
+        <AntHeader style={{ padding: 0, background: "#F5F7FE" }}>
+          <Header />
+        </AntHeader>
+        <Content
+          style={{
+            margin: "24px 16px",
+            padding: 24,
+            minHeight: 280,
+            background: "#fff",
+            borderRadius: "10px",
+          }}
+        >
           <Outlet />
-        </div>
-      </div>
-    </div>
-  </div>;
+        </Content>
+      </Layout>
+    </Layout>
+  );
 }
 
 export default DashboardLayout;

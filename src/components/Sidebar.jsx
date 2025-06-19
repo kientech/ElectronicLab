@@ -13,12 +13,14 @@ import { signOut } from "firebase/auth";
 import { toast } from "react-toastify";
 import { auth } from "../../database/db";
 import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
+import { usePosition } from "../contexts/PositionContext";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openDrawer, setOpenDrawer] = useState(false);
   const displayName = localStorage.getItem("displayName");
+  const { currentPosition } = usePosition();
 
   const handleLogout = async () => {
     try {
@@ -29,6 +31,13 @@ const Sidebar = () => {
     } catch (error) {
       toast.error("Đăng xuất thất bại!");
     }
+  };
+
+  const positionPathMap = {
+    "Phát Triển Mới Nhất": "/phat-trien-moi-nhat",
+    "Dự Án Nổi Bật": "/du-an-noi-bat",
+    "Ứng Dụng Công Nghệ": "/ung-dung-cong-nghe",
+    "Nền Tảng Kỹ Thuật": "/nen-tang-ky-thuat",
   };
 
   const items = [
@@ -42,6 +51,7 @@ const Sidebar = () => {
       label: "Giới Thiệu",
       icon: <HiOutlineUser size={20} />,
     },
+
     {
       key: "/phat-trien-moi-nhat",
       label: "Phát Triển Mới Nhất",
@@ -84,6 +94,46 @@ const Sidebar = () => {
     },
   ].filter(Boolean);
 
+  const getSelectedKeys = () => {
+    const currentPath = location.pathname;
+
+    // 1. Prioritize direct path match for most pages
+    const directMatchItem = items.find((item) => item.key === currentPath);
+    if (directMatchItem) {
+      console.log("Sidebar - Active by direct path:", currentPath);
+      return [currentPath];
+    }
+
+    // 2. Handle blog detail pages where 'currentPosition' or URL category segment determines active state
+    const pathSegments = currentPath.split("/").filter(Boolean);
+    if (pathSegments.length === 2) {
+      const urlCategoryPath = `/${pathSegments[0]}`;
+      // Prefer currentPosition if it's set and valid for a category path
+      if (
+        currentPosition &&
+        positionPathMap[currentPosition] === urlCategoryPath
+      ) {
+        console.log(
+          "Sidebar - Active by position (blog detail):",
+          urlCategoryPath
+        );
+        return [urlCategoryPath];
+      }
+      // Fallback to URL category if currentPosition is not set or doesn't match
+      if (Object.values(positionPathMap).includes(urlCategoryPath)) {
+        console.log(
+          "Sidebar - Active by URL category fallback (blog detail):",
+          urlCategoryPath
+        );
+        return [urlCategoryPath];
+      }
+    }
+
+    // If nothing matches, return an empty array (no item active)
+    console.log("Sidebar - No active key found.");
+    return [];
+  };
+
   return (
     <>
       <div className="hidden md:block max-w-[20%] max-h-screen bg-white dark:bg-[#161617] rounded-xl py-4 px-4 sticky top-2 left-2 bottom-2">
@@ -95,12 +145,12 @@ const Sidebar = () => {
         <div className="w-full h-[1px] bg-gray-100 my-6"></div>
         <div className="h-full">
           <Menu
-            className="bg-white text-black dark:bg-[#161617] dark:text-white"
+            className="bg-white text-black dark:bg-[#161617] dark:text-[15px]"
             onClick={({ key }) => {
               if (key === "logout") return;
               navigate(key);
             }}
-            selectedKeys={[location.pathname]}
+            selectedKeys={getSelectedKeys()}
             mode="inline"
             style={{
               width: 256,
@@ -109,11 +159,7 @@ const Sidebar = () => {
             }}
             items={items.map((item) => ({
               ...item,
-              className: `py-8 ${
-                location.pathname === item.key
-                  ? "bg-gray-100 dark:bg-[#1c1c1c] dark:text-white"
-                  : "hover:bg-gray-100 dark:hover:bg-[#1c1c1c] dark:hover:text-white"
-              }`,
+              className: "py-8 ",
             }))}
           />
         </div>
@@ -139,13 +185,13 @@ const Sidebar = () => {
       >
         <Menu
           mode="inline"
-          selectedKeys={[location.pathname]}
+          selectedKeys={getSelectedKeys()}
           items={items}
           onClick={({ key }) => {
             navigate(key);
             setOpenDrawer(false);
           }}
-          className="bg-transparent"
+          className="bg-transparent text-lg"
         />
       </Drawer>
     </>

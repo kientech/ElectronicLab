@@ -35,12 +35,28 @@ import NotFound from "./pages/NotFound";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../database/db";
 import { ThemeProvider } from "./context/ThemeContext";
+import NProgress from "nprogress";
+import "nprogress/nprogress.css";
+import { PositionProvider } from "./contexts/PositionContext";
+import Profile from "./pages/Profile";
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    NProgress.start();
+    NProgress.configure({ showSpinner: false });
+
+    // Simulate loading progress
+    const timer = setTimeout(() => {
+      NProgress.done();
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+      NProgress.done();
+    };
   }, [pathname]);
 
   return null;
@@ -65,11 +81,11 @@ const Layout = () => {
 
 const DashboardLayout = () => {
   return (
-    <div className="flex bg-[#F5F7FE] min-h-screen p-2 rounded-xl">
+    <div className="flex bg-[#F5F7FE] h-screen p-2 rounded-xl">
       <DashboardSidebar />
-      <div className="w-[80%]">
+      <div className="w-[80%] flex flex-col">
         <Header />
-        <div className="px-4 mx-8">
+        <div className="px-4 mx-8 flex-grow">
           <Outlet />
         </div>
       </div>
@@ -99,56 +115,71 @@ function App() {
       >
         <AuthProvider>
           <DarkModeProvider>
-            <Router>
-              <ScrollToTop />
-              <div className="min-h-screen flex flex-col">
-                <main className="flex-grow">
-                  <Routes>
-                    {/* Protected Admin Routes */}
-                    <Route element={<ProtectRoute />}>
-                      <Route path="/dashboard" element={<DashboardLayout />}>
-                        <Route index element={<Dashboard />} />
-                        <Route path="create-project" element={<CreateBlog />} />
-                        <Route path="edit-project/:id" element={<EditBlog />} />
-                        <Route path="all-projects" element={<AllProjects />} />
+            <PositionProvider>
+              <Router>
+                <ScrollToTop />
+                <div className="min-h-screen flex flex-col">
+                  <main className="flex-grow">
+                    <Routes>
+                      {/* Protected Admin Routes */}
+                      <Route element={<ProtectRoute />}>
+                        <Route path="/dashboard" element={<DashboardLayout />}>
+                          <Route index element={<Dashboard />} />
+                          <Route
+                            path="create-project"
+                            element={<CreateBlog />}
+                          />
+                          <Route
+                            path="edit-project/:id"
+                            element={<EditBlog />}
+                          />
+                          <Route
+                            path="all-projects"
+                            element={<AllProjects />}
+                          />
+                        </Route>
                       </Route>
-                    </Route>
 
-                    {/* Public Routes */}
-                    <Route path="/" element={<Layout />}>
-                      <Route index element={<HomePage />} />
-                      <Route path="about-me" element={<AboutMe />} />
-                      <Route
-                        path="danh-muc/:category"
-                        element={<CategoryPage />}
-                      />
-                      <Route path=":category/:slug" element={<BlogDetail />} />
-                      <Route
-                        path="phat-trien-moi-nhat"
-                        element={<LatestDevelopment />}
-                      />
-                      <Route
-                        path="du-an-noi-bat"
-                        element={<PopularProjects />}
-                      />
-                      <Route
-                        path="ung-dung-cong-nghe"
-                        element={<TechApplyPage />}
-                      />
-                      <Route
-                        path="nen-tang-ky-thuat"
-                        element={<MicPicPage />}
-                      />
-                      <Route path="bai-viet" element={<BlogsPage />} />
-                      <Route path="contact" element={<ContactMe />} />
-                    </Route>
+                      {/* Public Routes */}
+                      <Route path="/" element={<Layout />}>
+                        <Route index element={<HomePage />} />
+                        <Route path="about-me" element={<AboutMe />} />
+                        <Route path="profile" element={<Profile />} />
+                        <Route
+                          path="danh-muc/:category"
+                          element={<CategoryPage />}
+                        />
+                        <Route
+                          path=":category/:slug"
+                          element={<BlogDetail />}
+                        />
+                        <Route
+                          path="phat-trien-moi-nhat"
+                          element={<LatestDevelopment />}
+                        />
+                        <Route
+                          path="du-an-noi-bat"
+                          element={<PopularProjects />}
+                        />
+                        <Route
+                          path="ung-dung-cong-nghe"
+                          element={<TechApplyPage />}
+                        />
+                        <Route
+                          path="nen-tang-ky-thuat"
+                          element={<MicPicPage />}
+                        />
+                        <Route path="bai-viet" element={<BlogsPage />} />
+                        <Route path="contact" element={<ContactMe />} />
+                      </Route>
 
-                    {/* Fallback Route for NotFound */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-              </div>
-            </Router>
+                      {/* Fallback Route for NotFound */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                </div>
+              </Router>
+            </PositionProvider>
           </DarkModeProvider>
         </AuthProvider>
       </ConfigProvider>

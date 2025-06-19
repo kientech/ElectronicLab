@@ -92,10 +92,11 @@ function Header() {
   }, [greeting]);
 
   return (
-    <div className="flex items-center justify-between md:p-4 md:mx-8 md:ml-0 ml-16 dark:text-white p-4">
+    <div className="flex items-center justify-between dark:text-white p-4">
       <div>
         <h1 className="font-bold text-blue-500 dark:text-white md:text-xl text-sm">
-          {greeting}, {user ? user.displayName : "Quý khách"} 👋
+          {greeting}
+          {user ? ", " + user.displayName : ""} 👋
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {user
@@ -104,7 +105,7 @@ function Header() {
         </p>
       </div>
 
-      <div className="hidden md:flex items-center gap-x-4">
+      <div className="flex items-center gap-x-4">
         <div>
           <p className="font-semibold md:text-xl text-md text-blue-500 dark:text-white">
             {currentTime}
@@ -133,7 +134,13 @@ function Header() {
             placement="bottomRight"
             arrow
           >
-            <Button type="primary" icon={<UserOutlined />} className="h-10">
+            <Button type="primary" className="h-10">
+              <Avatar
+                src={user.photoURL || "https://via.placeholder.com/150"}
+                icon={<UserOutlined />}
+                alt="User Avatar"
+                className="mr-2"
+              />
               {user.displayName}
             </Button>
           </Dropdown>

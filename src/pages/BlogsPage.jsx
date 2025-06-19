@@ -4,6 +4,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { db } from "../../database/db";
 import { formatDate } from "../utils/formatDate";
+import { DEFAULT_IMAGE } from "../constants/images";
 
 function BlogsPage() {
   const [items, setItems] = useState([]);
@@ -144,6 +145,10 @@ function BlogsPage() {
                           }
                           alt={item?.title}
                           loading="lazy"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = DEFAULT_IMAGE;
+                          }}
                           className="rounded-xl h-full w-full object-cover group-hover:scale-110 transition-all"
                         />
                       </div>
